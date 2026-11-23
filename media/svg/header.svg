@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="835" height="106" viewBox="0 0 835 106">
+<style>
+.in{opacity:0;transform:translateY(6px);animation:in .65s cubic-bezier(.22,1,.36,1) forwards}
+.p{font:700 16px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#39d353}
+.n{font:700 30px -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:#e6edf3}
+.s{font:14px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#8b949e}
+.c{fill:#39d353;animation:blink 1.6s ease-in-out infinite}
+.bar{fill:#39d353;opacity:.35}
+@keyframes in{to{opacity:1;transform:none}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+@media (prefers-reduced-motion:reduce){.in{animation:none;opacity:1;transform:none}.c{animation:none}}
+</style>
+<g class="in">
+<text x="417.5" y="22" text-anchor="middle" class="p">$ whoami</text>
+<text x="417.5" y="56" text-anchor="middle" class="n">Rafif Nurfariz</text>
+<rect x="526" y="34" width="3" height="24" rx="1" class="c"/>
+<text x="417.5" y="84" text-anchor="middle" class="s">Beginner Programmer · Learning, experimenting, and building projects with code</text>
+<rect x="267.5" y="100" width="300" height="2" rx="1" class="bar"/>
+</g>
+</svg>
