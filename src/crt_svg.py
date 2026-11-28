@@ -173,12 +173,12 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     lang_list = " · ".join(name for name, _ in t.languages[:4]) or "Learning Code"
     stack_list = " · ".join(t.stacks[:4]) or lang_list
 
-    # Quick ~1.1s BIOS flash that clears once and never repeats
+    # Ultra-fast ~0.45s BIOS flash that clears once and never repeats
     bios_lines = [
         ("SYSTEM CHECK   : Developer Terminal Ready", "[OK]", 0.00),
-        ("MEMORY CHECK   : 65536K OK", "[PASS]", 0.15),
-        (f"USER PROFILE   : {t.display_name} (@{t.username})", "[FOUND]", 0.35),
-        ("LAUNCHING CMD  : whoami ...", "", 0.55),
+        ("MEMORY CHECK   : 65536K OK", "[PASS]", 0.05),
+        (f"USER PROFILE   : {t.display_name} (@{t.username})", "[FOUND]", 0.12),
+        ("LAUNCHING CMD  : whoami ...", "", 0.20),
     ]
 
     bios_rows_svg = []
@@ -187,7 +187,7 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
         cls = f"bl{idx}"
         if delay_s > 0:
             bios_delays_css.append(
-                f".{cls}{{opacity:0;animation:fade-in 0.12s ease {delay_s:.2f}s forwards}}"
+                f".{cls}{{opacity:0;animation:fade-in 0.08s ease {delay_s:.2f}s forwards}}"
             )
         y_pos = 144 + idx * 30
         tag_svg = (
@@ -216,9 +216,9 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     info_rows_svg = []
     for idx, (key, val) in enumerate(info_rows):
         cls = f"nl{idx}"
-        delay_s = 1.55 + idx * 0.06
+        delay_s = 0.68 + idx * 0.03
         info_delays_css.append(
-            f".{cls}{{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease {delay_s:.2f}s forwards}}"
+            f".{cls}{{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease {delay_s:.2f}s forwards}}"
         )
         y_pos = 186 + idx * 23
         info_rows_svg.append(
@@ -275,12 +275,12 @@ text{{font-family:{FONT_STACK}}}
 .note{{font-size:12px;fill:{AMBER_MID}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .cur-blink{{animation:cur-flash 1.05s steps(1,end) infinite}}
-.bios-phase{{animation:bios-exit 0.20s ease 1.10s forwards}}
-.tty-phase{{opacity:0;animation:fade-in 0.20s ease 1.22s forwards}}
-.mem-fill{{transform-origin:274px 167px;transform:scaleX(0.05);animation:mem-load 0.55s ease 0.15s forwards}}
-.cmd-clip-rect{{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.35s steps({len(cmd_text)},end) 1.28s forwards}}
-.type-cur{{opacity:0;animation:cur-slide 0.40s steps({len(cmd_text)},end) 1.26s forwards}}
-.bio-note{{opacity:0;animation:row-in 0.22s ease 2.00s forwards}}
+.bios-phase{{animation:bios-exit 0.10s ease 0.45s forwards}}
+.tty-phase{{opacity:0;animation:fade-in 0.12s ease 0.50s forwards}}
+.mem-fill{{transform-origin:274px 167px;transform:scaleX(0.05);animation:mem-load 0.28s ease 0.05s forwards}}
+.cmd-clip-rect{{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.22s steps({len(cmd_text)},end) 0.52s forwards}}
+.type-cur{{opacity:0;animation:cur-slide 0.25s steps({len(cmd_text)},end) 0.51s forwards}}
+.bio-note{{opacity:0;animation:row-in 0.15s ease 0.90s forwards}}
 {"".join(bios_delays_css)}
 {"".join(info_delays_css)}
 @keyframes fade-in{{to{{opacity:1}}}}

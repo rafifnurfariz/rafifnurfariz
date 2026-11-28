@@ -18,14 +18,14 @@ text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-R
 .note{font-size:12px;fill:#cc8800}
 .led{animation:led-pulse 2.2s ease-in-out infinite}
 .cur-blink{animation:cur-flash 1.05s steps(1,end) infinite}
-.bios-phase{animation:bios-exit 0.20s ease 1.10s forwards}
-.tty-phase{opacity:0;animation:fade-in 0.20s ease 1.22s forwards}
-.mem-fill{transform-origin:274px 167px;transform:scaleX(0.05);animation:mem-load 0.55s ease 0.15s forwards}
-.cmd-clip-rect{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.35s steps(6,end) 1.28s forwards}
-.type-cur{opacity:0;animation:cur-slide 0.40s steps(6,end) 1.26s forwards}
-.bio-note{opacity:0;animation:row-in 0.22s ease 2.00s forwards}
-.bl1{opacity:0;animation:fade-in 0.12s ease 0.15s forwards}.bl2{opacity:0;animation:fade-in 0.12s ease 0.35s forwards}.bl3{opacity:0;animation:fade-in 0.12s ease 0.55s forwards}
-.nl0{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.55s forwards}.nl1{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.61s forwards}.nl2{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.67s forwards}.nl3{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.73s forwards}.nl4{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.79s forwards}.nl5{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.85s forwards}.nl6{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease 1.91s forwards}
+.bios-phase{animation:bios-exit 0.10s ease 0.45s forwards}
+.tty-phase{opacity:0;animation:fade-in 0.12s ease 0.50s forwards}
+.mem-fill{transform-origin:274px 167px;transform:scaleX(0.05);animation:mem-load 0.28s ease 0.05s forwards}
+.cmd-clip-rect{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.22s steps(6,end) 0.52s forwards}
+.type-cur{opacity:0;animation:cur-slide 0.25s steps(6,end) 0.51s forwards}
+.bio-note{opacity:0;animation:row-in 0.15s ease 0.90s forwards}
+.bl1{opacity:0;animation:fade-in 0.08s ease 0.05s forwards}.bl2{opacity:0;animation:fade-in 0.08s ease 0.12s forwards}.bl3{opacity:0;animation:fade-in 0.08s ease 0.20s forwards}
+.nl0{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.68s forwards}.nl1{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.71s forwards}.nl2{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.74s forwards}.nl3{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.77s forwards}.nl4{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.80s forwards}.nl5{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.83s forwards}.nl6{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease 0.86s forwards}
 @keyframes fade-in{to{opacity:1}}
 @keyframes row-in{to{opacity:1;transform:none}}
 @keyframes bios-exit{to{opacity:0;visibility:hidden}}
