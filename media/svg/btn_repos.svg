@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="220" height="34" viewBox="0 0 220 34">
+<svg xmlns="http://www.w3.org/2000/svg" width="172" height="36" viewBox="0 0 172 36">
 <style>
 text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace;font-size:12px;font-weight:700;fill:#ffd54f}
 .pre{fill:#ffb000}
 </style>
-<rect width="220" height="34" rx="6" fill="#14110c" stroke="#7a5200" stroke-width="1.2"/>
-<rect x="2" y="2" width="216" height="30" rx="4.5" fill="none" stroke="#291c06" stroke-width="1"/>
-<text x="110.0" y="21" text-anchor="middle"><tspan class="pre">&gt;_ </tspan>gh://rafifnurfariz/repos</text>
+<rect width="172" height="36" rx="6" fill="#14110c" stroke="#7a5200" stroke-width="1.2"/>
+<rect x="2" y="2" width="168" height="32" rx="4.5" fill="none" stroke="#291c06" stroke-width="1"/>
+<text x="86.0" y="22" text-anchor="middle"><tspan class="pre">&gt;_ </tspan>GitHub Repos</text>
 </svg>

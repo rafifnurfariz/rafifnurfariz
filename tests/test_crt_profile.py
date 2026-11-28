@@ -18,24 +18,39 @@ HAS_MEDIA_DEPS = all(importlib.util.find_spec(pkg) is not None for pkg in ("PIL"
 
 
 class CrtSvgTests(unittest.TestCase):
-    def test_svgs_are_valid_xml_with_crt_amber_theme(self) -> None:
+    def test_svgs_are_valid_xml_play_once_and_hide_external_deploy_url(self) -> None:
         t = build_sample_telemetry("rafifnurfariz")
         bios = render_bios_terminal(t)
         btop = render_btop_telemetry(t)
-        btn = render_cli_button("@rapip1241", "ig")
+        btn = render_cli_button("Instagram @rapip1241")
 
         for svg in (bios, btop, btn):
             root = ET.fromstring(svg)
             self.assertTrue(root.tag.endswith("svg"))
+            self.assertNotIn("photopip.vercel.app", svg)
 
         for required in ("#121212", "#ffb000", "prefers-reduced-motion:reduce"):
             self.assertIn(required, bios)
             self.assertIn(required, btop)
 
         self.assertIn("RAFIF-BIOS", bios)
-        self.assertIn("neofetch --crt amber", bios)
-        self.assertIn("btop++", btop)
+        self.assertIn("whoami", bios)
+        self.assertIn("bios-exit 0.35s ease 6.00s forwards", bios)
+        self.assertNotIn(".bios-phase{animation:kf-bios-phase", bios)
+        self.assertIn("TOP LANGUAGES &amp; TOOLS", btop)
         self.assertIn("Photopip", btop)
+
+    def test_readme_order_and_no_website_links(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn("photopip.vercel.app", readme)
+        self.assertNotIn("btn_web.svg", readme)
+
+        pos_bios = readme.index("media/svg/crt_bios.svg")
+        pos_cur = readme.index("media/svg/currents_crt.svg")
+        pos_cow = readme.index("media/images/polish-cow-crt.gif")
+        pos_ig = readme.index("media/svg/btn_ig.svg")
+        pos_stats = readme.index("media/svg/btop_telemetry.svg")
+        self.assertTrue(pos_bios < pos_cur < pos_cow < pos_ig < pos_stats)
 
     def test_escapes_xml_special_characters_and_clamps_long_messages(self) -> None:
         t = build_sample_telemetry("rafifnurfariz")

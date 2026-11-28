@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="228" height="34" viewBox="0 0 228 34">
-<style>
-text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace;font-size:12px;font-weight:700;fill:#ffd54f}
-.pre{fill:#ffb000}
-</style>
-<rect width="228" height="34" rx="6" fill="#14110c" stroke="#7a5200" stroke-width="1.2"/>
-<rect x="2" y="2" width="224" height="30" rx="4.5" fill="none" stroke="#291c06" stroke-width="1"/>
-<text x="114.0" y="21" text-anchor="middle"><tspan class="pre">&gt;_ </tspan>app://photopip.vercel.app</text>
-</svg>

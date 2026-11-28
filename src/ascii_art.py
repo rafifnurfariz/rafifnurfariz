@@ -116,8 +116,8 @@ def render_currents_crt(
         prefix,
         w,
         h,
-        "TTY3 // ascii-view currents.jpg",
-        "P3-AMBER",
+        "MUSIC // Tame Impala - Currents",
+        "ASCII ART",
     )
 
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
@@ -142,7 +142,7 @@ text{{font-family:{FONT_STACK}}}
     {chr(10).join(groups)}
   </g>
   <line x1="26" y1="392" x2="{w - 26}" y2="392" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
-  <text x="28" y="408" class="foot-k">&gt; playing: <tspan class="foot-v">Tame Impala - Currents</tspan></text>
+  <text x="28" y="408" class="foot-k">&gt; album: <tspan class="foot-v">Tame Impala - Currents</tspan></text>
   <text x="{w - 28}" y="408" text-anchor="end" class="foot-d">[ASCII]</text>
 </g>
 {chrome_overlay}

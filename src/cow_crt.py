@@ -86,12 +86,12 @@ def _build_base_chassis(w: int, h: int, font_b: ImageFont.ImageFont, font_r: Ima
     draw.rectangle([12, 30, w - 13, 42], fill=SCREEN_BAR)
     draw.line([12, 42, w - 13, 42], fill=SCREEN_STROKE, width=1)
 
-    draw.text((40, 21), "TTY4 // polish-cow.gif", font=font_b, fill=AMBER_CORE)
-    draw.text((w - 28, 22), "128 BPM", font=font_r, fill=AMBER_MID, anchor="ra")
+    draw.text((40, 21), "MOOD // Polish Cow", font=font_b, fill=AMBER_CORE)
+    draw.text((w - 28, 22), "VIBING", font=font_r, fill=AMBER_MID, anchor="ra")
 
     draw.line([26, 392, w - 26, 392], fill=PANEL_DIVIDER, width=1)
-    draw.text((28, 398), "> mood:", font=font_b, fill=AMBER_CORE)
-    draw.text((84, 398), "polish_cow.gif", font=font_r, fill=AMBER_BRIGHT)
+    draw.text((28, 398), "> status:", font=font_b, fill=AMBER_CORE)
+    draw.text((92, 398), "coding & vibing", font=font_r, fill=AMBER_BRIGHT)
     return base
 
 
