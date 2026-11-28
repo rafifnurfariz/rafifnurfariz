@@ -342,7 +342,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
 
     lang_sum = sum(_safe_nonneg_int(b_val) for _, b_val in t.languages)
     effective_total = _safe_nonneg_int(t.total_bytes) or lang_sum
-    p1 = _panel_box(22, 58, 424, 190, "TOP LANGUAGES & TOOLS", fmt_bytes(effective_total))
+    p1 = _panel_box(22, 58, 424, 190, "TOP LANGUAGES & TOOLS")
     total_b = max(1, effective_total)
     top_langs = t.languages[:4] if t.languages else [("Exploring", 0)]
     lang_rows = []
@@ -354,9 +354,8 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
         lang_rows.append(
             f'<text x="36" y="{ry}" class="lbl">{esc(clamp_text(lang, 11))}</text>'
             f'<g transform="translate(134,{ry - 9})"><g class="bar-grow" style="animation-delay:{delay:.2f}s">'
-            f'{_segmented_bar(0, 0, pct, segments=18)}</g></g>'
-            f'<text x="352" y="{ry}" text-anchor="end" class="val">{pct:5.1f}%</text>'
-            f'<text x="430" y="{ry}" text-anchor="end" class="dim">{esc(fmt_bytes(safe_b))}</text>'
+            f'{_segmented_bar(0, 0, pct, segments=24)}</g></g>'
+            f'<text x="430" y="{ry}" text-anchor="end" class="val">{pct:5.1f}%</text>'
         )
 
     tag_x = 36.0
@@ -380,7 +379,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
 
     p2 = _panel_box(458, 58, 380, 190, "GITHUB OVERVIEW", "LIVE")
     kv_pairs = [
-        ("REPOS", f"{_safe_nonneg_int(t.public_repos):02d}", "CODE SIZE", fmt_bytes(effective_total)),
+        ("REPOS", f"{_safe_nonneg_int(t.public_repos):02d}", "SINCE", clamp_text(t.created_at[:7], 10)),
         ("STARS", f"{_safe_nonneg_int(t.total_stars):02d}", "FORKS", f"{_safe_nonneg_int(t.total_forks):02d}"),
         ("FOLLOWERS", f"{_safe_nonneg_int(t.followers):02d}", "ACTIVE", fmt_uptime(t.uptime_days)),
     ]
