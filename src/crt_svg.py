@@ -1,7 +1,10 @@
-"""Retro CRT Amber SVG rendering engine for BIOS/CMD and GitHub stats."""
+"""GitHub Blue CRT SVG rendering engine for BIOS/CMD and GitHub stats."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import html
+import math
+import re
 
 from github_stats import ProfileTelemetry
 
@@ -22,36 +25,54 @@ ACCENT_DIM = "#388bfd"
 ACCENT_DARK = "#162438"
 
 FONT_STACK = "'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace"
+_XML_ILLEGAL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufffe\uffff]")
+
+
+def _strip_xml_illegal(text: str) -> str:
+    return _XML_ILLEGAL_RE.sub("", str(text))
 
 
 def esc(text: str) -> str:
-    return html.escape(str(text), quote=True)
+    return html.escape(_strip_xml_illegal(text), quote=True)
 
 
 def clamp_text(text: str, max_len: int) -> str:
-    clean = " ".join(str(text).split())
+    if max_len <= 0:
+        return ""
+    clean = " ".join(_strip_xml_illegal(text).split())
     if len(clean) <= max_len:
         return clean
-    return clean[: max(1, max_len - 3)].rstrip() + "..."
+    if max_len <= 3:
+        return clean[:max_len]
+    return clean[: max_len - 3].rstrip() + "..."
 
 
 def fmt_bytes(byte_count: int) -> str:
-    if byte_count >= 1_048_576:
-        return f"{byte_count / 1_048_576:.1f} MB"
-    return f"{max(0.1, byte_count / 1024):.1f} KB"
+    val = max(0, int(byte_count))
+    if val == 0:
+        return "0.0 KB"
+    if val >= 1_073_741_824:
+        return f"{val / 1_073_741_824:.1f} GB"
+    if val >= 1_048_576:
+        return f"{val / 1_048_576:.1f} MB"
+    return f"{max(0.1, val / 1024):.1f} KB"
 
 
 def fmt_repo_kb(size_kb: int) -> str:
-    if size_kb >= 1024:
-        return f"{size_kb / 1024:.1f} MB"
-    return f"{size_kb} KB"
+    val = max(0, int(size_kb))
+    if val >= 1_048_576:
+        return f"{val / 1_048_576:.1f} GB"
+    if val >= 1024:
+        return f"{val / 1024:.1f} MB"
+    return f"{val} KB"
 
 
 def fmt_uptime(days: int) -> str:
-    if days >= 365:
-        years, rem = divmod(days, 365)
+    val = max(0, int(days))
+    if val >= 365:
+        years, rem = divmod(val, 365)
         return f"{years}y {rem}d"
-    return f"{days}d"
+    return f"{val}d"
 
 
 def _crt_defs(prefix: str, width: int, height: int, extra: str = "") -> str:
@@ -85,10 +106,12 @@ def _crt_chrome(prefix: str, width: int, height: int, left_title: str, right_sta
     inner_h = height - 24
     base = (
         f'<rect width="{width}" height="{height}" rx="14" fill="{CHASSIS_BG}" stroke="{CHASSIS_STROKE}" stroke-width="1.5"/>'
-        f'<rect x="12" y="12" width="{inner_w}" height="{inner_h}" rx="9" fill="{SCREEN_BG}" stroke="{SCREEN_STROKE}" stroke-width="1.2"/>'
-        f'<rect x="12" y="12" width="{inner_w}" height="30" rx="9" fill="{SCREEN_BAR}"/>'
-        f'<rect x="12" y="30" width="{inner_w}" height="12" fill="{SCREEN_BAR}"/>'
+        f'<rect x="12" y="12" width="{inner_w}" height="{inner_h}" rx="9" fill="{SCREEN_BG}"/>'
+        f'<g clip-path="url(#{prefix}-scr)">'
+        f'<rect x="12" y="12" width="{inner_w}" height="30" fill="{SCREEN_BAR}"/>'
         f'<line x1="12" y1="42" x2="{width - 12}" y2="42" stroke="{SCREEN_STROKE}" stroke-width="1"/>'
+        "</g>"
+        f'<rect x="12" y="12" width="{inner_w}" height="{inner_h}" rx="9" fill="none" stroke="{SCREEN_STROKE}" stroke-width="1.2"/>'
         f'<circle cx="28" cy="27" r="4" fill="{ACCENT_CORE}" class="led" filter="url(#{prefix}-glow)"/>'
         f'<text x="40" y="31" class="bar-t">{esc(left_title)}</text>'
         f'<text x="{width - 26}" y="31" text-anchor="end" class="bar-r">{esc(right_status)}</text>'
@@ -130,23 +153,35 @@ def _crt_ascii_art(x: int, y: int) -> str:
     return "".join(out)
 
 
+def _resolve_year(synced_at: str) -> str:
+    match = re.match(r"^(\d{4})\b", str(synced_at).strip())
+    return match.group(1) if match else str(datetime.now(timezone.utc).year)
+
+
 def render_bios_terminal(t: ProfileTelemetry) -> str:
-    """Render Retro CRT Amber CMD profile terminal SVG directly with no loading gimmick."""
+    """Render GitHub Blue CRT CMD profile terminal SVG directly with no loading gimmick."""
     w, h = 860, 420
     prefix = "bios"
     top_project = next((r for r in t.repos if not r.is_profile_repo), t.repos[0] if t.repos else None)
-    top_name = top_project.name if top_project else t.username
+    safe_user = clamp_text(t.username, 28)
+    safe_name = clamp_text(t.display_name, 26)
+    year = _resolve_year(t.synced_at)
 
     lang_list = " · ".join(name for name, _ in t.languages[:4]) or "Learning Code"
     stack_list = " · ".join(t.stacks[:4]) or lang_list
+    projects_summary = (
+        f"{t.public_repos:02d} public repositories (e.g. {clamp_text(top_project.name, 16)})"
+        if top_project is not None
+        else f"{t.public_repos:02d} public repositories"
+    )
 
     info_rows = [
-        ("NAME", f"{t.display_name} (@{t.username})"),
+        ("NAME", clamp_text(f"{t.display_name} (@{t.username})", 44)),
         ("ROLE", "Beginner Programmer · Coding & Learning"),
         ("SKILLS", clamp_text(stack_list, 44)),
         ("LANGUAGES", clamp_text(lang_list, 44)),
         ("TOOLS", "Windows · VS Code · GitHub"),
-        ("PROJECTS", f"{t.public_repos:02d} public repositories (e.g. {clamp_text(top_name, 16)})"),
+        ("PROJECTS", projects_summary),
         ("SINCE", f"{t.created_at} ({fmt_uptime(t.uptime_days)} on GitHub)"),
     ]
 
@@ -167,17 +202,17 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
             "</g>"
         )
 
-    prompt_text = f"C:\\Users\\{t.username}>"
+    prompt_text = f"C:\\Users\\{safe_user}>"
     prompt_w = round(len(prompt_text) * 7.8)
     cmd_x = 32 + prompt_w + 8
     cmd_text = "whoami"
-    cmd_w = round(len(cmd_text) * 7.8) + 2
+    cmd_w = round(len(cmd_text) * 7.8)
 
     chrome_base, chrome_overlay = _crt_chrome(
         prefix,
         w,
         h,
-        f"CMD.EXE // {t.username}",
+        f"CMD.EXE // {safe_user}",
         "GITHUB CONSOLE",
     )
 
@@ -216,16 +251,16 @@ text{{font-family:{FONT_STACK}}}
 <g clip-path="url(#{prefix}-scr)">
   <g class="hdr-in">
     <text x="32" y="74" class="tty-h">Microsoft Windows [GitHub Console] // Developer Profile</text>
-    <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
+    <text x="32" y="92" class="tty-h">(c) {year} {esc(safe_name)}. Welcome to my GitHub workspace.</text>
     <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
-    <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
+    <text x="{cmd_x}" y="118" textLength="{cmd_w}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
     <line x1="32" y1="132" x2="828" y2="132" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
   </g>
 
   <g class="asc-in"><g class="asc-glow">{_crt_ascii_art(28, 158)}</g></g>
 
   <g class="hdr-in">
-    <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(t.display_name)} <tspan class="bar-r">(@{esc(t.username)})</tspan></text>
+    <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(safe_name)} <tspan class="bar-r">(@{esc(safe_user)})</tspan></text>
     <line x1="382" y1="166" x2="820" y2="166" stroke="{PANEL_BORDER}" stroke-width="1"/>
   </g>
   {"".join(info_rows_svg)}
@@ -239,29 +274,37 @@ text{{font-family:{FONT_STACK}}}
 
 
 def _panel_box(x: int, y: int, w: int, h: int, title: str, right_hint: str = "") -> str:
-    title_w = len(title) * 7.2 + 16
-    right_svg = (
-        f'<rect x="{x + w - len(right_hint) * 7 - 24}" y="{y - 8}" width="{len(right_hint) * 7 + 14}" height="16" fill="{SCREEN_BG}"/>'
-        f'<text x="{x + w - 16}" y="{y + 3}" text-anchor="end" class="p-hint">{esc(right_hint)}</text>'
-        if right_hint
-        else ""
-    )
+    clean_title = _strip_xml_illegal(title)
+    clean_hint = _strip_xml_illegal(right_hint)
+    title_w = min(w - 24.0, len(clean_title) * 7.2 + 16.0)
+    if clean_hint:
+        max_hint_w = max(24.0, w - title_w - 36.0)
+        hint_w = min(max_hint_w, len(clean_hint) * 7.0 + 14.0)
+        hint_x = x + w - hint_w - 10.0
+        right_svg = (
+            f'<rect x="{hint_x:.1f}" y="{y - 8}" width="{hint_w:.1f}" height="16" fill="{SCREEN_BG}"/>'
+            f'<text x="{x + w - 16}" y="{y + 3}" text-anchor="end" class="p-hint">{esc(clean_hint)}</text>'
+        )
+    else:
+        right_svg = ""
     return (
         f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="#111722" stroke="{PANEL_BORDER}" stroke-width="1.2"/>'
         f'<rect x="{x + 12}" y="{y - 8}" width="{title_w:.1f}" height="16" fill="{SCREEN_BG}"/>'
-        f'<text x="{x + 19}" y="{y + 3}" class="p-title">{esc(title)}</text>'
+        f'<text x="{x + 19}" y="{y + 3}" class="p-title">{esc(clean_title)}</text>'
         f"{right_svg}"
     )
 
 
 def _segmented_bar(x: int, y: int, pct: float, segments: int = 18) -> str:
-    filled = max(1 if pct > 0 else 0, round((pct / 100.0) * segments))
+    safe_segments = max(1, int(segments))
+    safe_pct = max(0.0, min(100.0, float(pct) if math.isfinite(pct) else 0.0))
+    filled = min(safe_segments, max(1 if safe_pct > 0 else 0, round((safe_pct / 100.0) * safe_segments)))
     seg_w, gap = 7, 2
     rects = []
-    for idx in range(segments):
+    for idx in range(safe_segments):
         sx = x + idx * (seg_w + gap)
         if idx < filled:
-            fill = ACCENT_BRIGHT if idx >= segments - 4 else ACCENT_CORE
+            fill = ACCENT_BRIGHT if idx >= safe_segments - 4 else ACCENT_CORE
             opacity = "0.95"
         else:
             fill = ACCENT_DARK
@@ -274,20 +317,22 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     """Render simplified CMD-style GitHub Blue stats & projects SVG."""
     w, h = 860, 466
     prefix = "btop"
+    safe_user = clamp_text(t.username, 28)
     chrome_base, chrome_overlay = _crt_chrome(
         prefix,
         w,
         h,
-        f"CMD // GitHub Stats & Projects ({t.username})",
+        f"CMD // GitHub Stats & Projects ({safe_user})",
         f"Updated {t.synced_at}",
     )
 
     p1 = _panel_box(22, 58, 424, 190, "TOP LANGUAGES & TOOLS", fmt_bytes(t.total_bytes))
     total_b = max(1, t.total_bytes)
-    top_langs = t.languages[:4] if t.languages else [("Exploring", 1)]
+    top_langs = t.languages[:4] if t.languages else [("Exploring", 0)]
     lang_rows = []
     for idx, (lang, b_val) in enumerate(top_langs):
-        pct = (b_val / total_b) * 100.0 if t.total_bytes else 0.0
+        safe_b = max(0, int(b_val))
+        pct = min(100.0, (safe_b / total_b) * 100.0) if t.total_bytes > 0 else 0.0
         ry = 86 + idx * 28
         delay = 0.08 + idx * 0.07
         lang_rows.append(
@@ -295,30 +340,33 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
             f'<g transform="translate(134,{ry - 9})"><g class="bar-grow" style="animation-delay:{delay:.2f}s">'
             f'{_segmented_bar(0, 0, pct, segments=18)}</g></g>'
             f'<text x="352" y="{ry}" text-anchor="end" class="val">{pct:5.1f}%</text>'
-            f'<text x="430" y="{ry}" text-anchor="end" class="dim">{esc(fmt_bytes(b_val))}</text>'
+            f'<text x="430" y="{ry}" text-anchor="end" class="dim">{esc(fmt_bytes(safe_b))}</text>'
         )
 
-    tag_x = 36
+    tag_x = 36.0
     tag_y = 210
     module_tags = []
     for t_idx, mod in enumerate(t.stacks[:6]):
-        tw = len(mod) * 6.8 + 14
+        mod_label = clamp_text(mod, 16)
+        if not mod_label:
+            continue
+        tw = len(mod_label) * 6.8 + 14.0
         if tag_x + tw > 432:
             break
         delay = 0.16 + t_idx * 0.04
         module_tags.append(
             f'<g class="tag-pop" style="animation-delay:{delay:.2f}s">'
-            f'<rect x="{tag_x}" y="{tag_y}" width="{tw:.1f}" height="20" rx="3" fill="#132238" stroke="{ACCENT_DIM}" stroke-width="0.9"/>'
-            f'<text x="{tag_x + tw / 2:.1f}" y="{tag_y + 13.5}" text-anchor="middle" class="tag">{esc(mod)}</text>'
-            '</g>'
+            f'<rect x="{tag_x:.1f}" y="{tag_y}" width="{tw:.1f}" height="20" rx="3" fill="#132238" stroke="{ACCENT_DIM}" stroke-width="0.9"/>'
+            f'<text x="{tag_x + tw / 2:.1f}" y="{tag_y + 13.5:.1f}" text-anchor="middle" class="tag">{esc(mod_label)}</text>'
+            "</g>"
         )
-        tag_x += tw + 6
+        tag_x += tw + 6.0
 
     p2 = _panel_box(458, 58, 380, 190, "GITHUB OVERVIEW", "LIVE")
     kv_pairs = [
-        ("REPOS", f"{t.public_repos:02d}", "CODE SIZE", fmt_bytes(t.total_bytes)),
-        ("STARS", f"{t.total_stars:02d}", "FORKS", f"{t.total_forks:02d}"),
-        ("FOLLOWERS", f"{t.followers:02d}", "ACTIVE", fmt_uptime(t.uptime_days)),
+        ("REPOS", f"{max(0, t.public_repos):02d}", "CODE SIZE", fmt_bytes(t.total_bytes)),
+        ("STARS", f"{max(0, t.total_stars):02d}", "FORKS", f"{max(0, t.total_forks):02d}"),
+        ("FOLLOWERS", f"{max(0, t.followers):02d}", "ACTIVE", fmt_uptime(t.uptime_days)),
     ]
     kv_svg = []
     for r_i, (k1, v1, k2, v2) in enumerate(kv_pairs):
@@ -330,28 +378,33 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
             f'<text x="822" y="{ry}" text-anchor="end" class="val-hi">{esc(v2)}</text>'
         )
 
-    series = t.push_series or [0] * 14
-    peak = max(1, max(series))
+    raw_series = [max(0, int(v)) for v in (t.push_series or [])]
+    if len(raw_series) >= 14:
+        series = raw_series[-14:]
+    else:
+        series = [0] * (14 - len(raw_series)) + raw_series
+    series_max = max(series)
+    peak = max(1, series_max)
     spark_bars = []
     base_x = 476
     bar_w = 19
     gap = 6
     max_bar_h = 44
-    for i, val in enumerate(series[:14]):
+    for i, val in enumerate(series):
         bh = max(4, round((val / peak) * max_bar_h)) if val > 0 else 3
         bx = base_x + i * (bar_w + gap)
-        fill = ACCENT_BRIGHT if val == max(series) and val > 0 else (ACCENT_CORE if val > 0 else ACCENT_DARK)
+        fill = ACCENT_BRIGHT if val == series_max and val > 0 else (ACCENT_CORE if val > 0 else ACCENT_DARK)
         delay = 0.08 + i * 0.025
         spark_bars.append(
             f'<g transform="translate({bx},228)">'
             f'<rect class="pulse-bar" style="animation-delay:{delay:.3f}s" x="0" y="{-bh}" width="{bar_w}" height="{bh}" rx="1.5" fill="{fill}"/>'
-            '</g>'
+            "</g>"
         )
 
     spark_svg = (
         f'<line x1="474" y1="150" x2="822" y2="150" stroke="{PANEL_DIVIDER}" stroke-width="1"/>'
         f'<text x="474" y="168" class="dim">ACTIVITY (14 DAYS)</text>'
-        f'<text x="822" y="168" text-anchor="end" class="val">{t.recent_push_count} updates · peak {max(series)}/d</text>'
+        f'<text x="822" y="168" text-anchor="end" class="val">{max(0, t.recent_push_count)} updates · peak {series_max}/d</text>'
         f'<line x1="474" y1="196" x2="822" y2="196" stroke="{PANEL_DIVIDER}" stroke-dasharray="3 3" stroke-width="1"/>'
         f'{"".join(spark_bars)}'
     )
@@ -369,7 +422,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     for idx, repo in enumerate(t.repos[:2]):
         ry = 318 + idx * 21
         category = "Profile README & Sync" if repo.is_profile_repo else clamp_text(repo.description or "App Repository", 28)
-        code_label = fmt_bytes(repo.code_bytes) if repo.code_bytes else fmt_repo_kb(repo.size_kb)
+        code_label = fmt_bytes(repo.code_bytes) if repo.code_bytes > 0 else fmt_repo_kb(repo.size_kb)
         delay = 0.14 + idx * 0.06
         proc_rows.append(
             f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
@@ -378,7 +431,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
             f'<text x="360" y="{ry}" class="val">{esc(code_label)}</text>'
             f'<text x="462" y="{ry}" class="dim">{esc(repo.pushed_at)}</text>'
             f'<text x="580" y="{ry}" class="ok">{esc(category)}</text>'
-            '</g>'
+            "</g>"
         )
 
     git_log_rows = [f'<line x1="38" y1="354" x2="822" y2="354" stroke="{PANEL_DIVIDER}" stroke-width="1"/>']
@@ -389,14 +442,16 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
         for idx, c in enumerate(commits):
             cy = 376 + idx * 21
             delay = 0.26 + idx * 0.06
+            commit_msg = clamp_text(c.message or "(no commit message)", 58) or "(no commit message)"
+            short_sha = _strip_xml_illegal(c.sha).strip()[:7]
             git_log_rows.append(
                 f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
                 f'<text x="38" y="{cy}" class="ok">*</text>'
-                f'<text x="54" y="{cy}" class="val-hi">{esc(c.sha)}</text>'
+                f'<text x="54" y="{cy}" class="val-hi">{esc(short_sha)}</text>'
                 f'<text x="122" y="{cy}" class="dim">{esc(c.date)}</text>'
                 f'<text x="214" y="{cy}" class="lbl">[{esc(clamp_text(c.repo, 15))}]</text>'
-                f'<text x="342" y="{cy}" class="val">{esc(clamp_text(c.message, 58))}</text>'
-                '</g>'
+                f'<text x="342" y="{cy}" class="val">{esc(commit_msg)}</text>'
+                "</g>"
             )
 
     footer = (
@@ -435,7 +490,8 @@ text{{font-family:{FONT_STACK}}}
 </style>
 {_crt_defs(prefix, w, h)}
 {chrome_base}
-<g clip-path="url(#{prefix}-scr)" class="in">
+<g clip-path="url(#{prefix}-scr)">
+<g class="in">
   {p1}
   {"".join(lang_rows)}
   {"".join(module_tags)}
@@ -447,6 +503,7 @@ text{{font-family:{FONT_STACK}}}
   {"".join(proc_rows)}
   {"".join(git_log_rows)}
   {footer}
+</g>
 </g>
 {chrome_overlay}
 </svg>'''
@@ -477,15 +534,17 @@ BRAND_LOGOS: dict[str, tuple[str, str]] = {
 
 
 def render_cli_button(label: str, icon: str = "", delay_s: float = 0.0) -> str:
-    """Render a compact Retro CRT Amber command-keycap SVG badge with subtle motion."""
+    """Render a compact GitHub Blue CRT command-keycap SVG badge with subtle motion."""
+    clean_label = " ".join(_strip_xml_illegal(label).split())
+    safe_delay = max(0.0, float(delay_s)) if math.isfinite(delay_s) else 0.0
     logo_defs, logo_shape = BRAND_LOGOS.get(icon, ("", ""))
-    text_w = round((len(label) + 3) * 7.5)
+    text_w = round((len(clean_label) + 3) * 7.5)
     icon_pad = 28 if logo_shape else 0
     w = max(180, text_w + icon_pad + 32)
     h = 38
     text_x = 16 + icon_pad if logo_shape else w / 2
     anchor = "start" if logo_shape else "middle"
-    float_delay = delay_s + 0.35
+    float_delay = safe_delay + 0.35
     logo_svg = (
         f'<g transform="translate(14,9)"><g class="ico" style="animation-delay:{float_delay:.2f}s">{logo_shape}</g></g>'
         if logo_shape
@@ -495,7 +554,7 @@ def render_cli_button(label: str, icon: str = "", delay_s: float = 0.0) -> str:
 <style>
 text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{ACCENT_SOFT}}}
 .pre{{fill:{ACCENT_CORE}}}
-.btn{{opacity:0;transform:translateY(8px);animation:btn-in 0.55s cubic-bezier(.16,1,.3,1) {delay_s + 0.20:.2f}s forwards}}
+.btn{{opacity:0;transform:translateY(8px);animation:btn-in 0.55s cubic-bezier(.16,1,.3,1) {safe_delay + 0.20:.2f}s forwards}}
 .ico{{animation:ico-float 3.4s ease-in-out infinite}}
 @keyframes btn-in{{to{{opacity:1;transform:none}}}}
 @keyframes ico-float{{0%,100%{{transform:translateY(0)}}50%{{transform:translateY(-1.2px)}}}}
@@ -506,6 +565,6 @@ text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{ACCENT_SOFT}
 <rect width="{w}" height="{h}" rx="7" fill="{SCREEN_BAR}" stroke="{SCREEN_STROKE}" stroke-width="1.2"/>
 <rect x="2" y="2" width="{w - 4}" height="{h - 4}" rx="5" fill="none" stroke="#1e293b" stroke-width="1"/>
 {logo_svg}
-<text x="{text_x:.1f}" y="23" text-anchor="{anchor}"><tspan class="pre">&gt;_ </tspan>{esc(label)}</text>
+<text x="{text_x:.1f}" y="23" text-anchor="{anchor}"><tspan class="pre">&gt;_ </tspan>{esc(clean_label)}</text>
 </g>
 </svg>'''

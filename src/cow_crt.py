@@ -9,6 +9,10 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageSequence
 from scipy import ndimage
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_SRC = REPO_ROOT / "media" / "images" / "mood-cow.webp"
+DEFAULT_OUT = REPO_ROOT / "media" / "images" / "polish-cow-crt.gif"
+
 CHASSIS_BG = (9, 13, 19)
 CHASSIS_STROKE = (33, 38, 45)
 SCREEN_BG = (13, 17, 23)
@@ -28,18 +32,42 @@ def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageF
             "C:/Windows/Fonts/consolab.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf",
+            "/System/Library/Fonts/Menlo.ttc",
         ]
         if bold
         else [
             "C:/Windows/Fonts/consola.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf",
+            "/System/Library/Fonts/Menlo.ttc",
         ]
     )
     for path in candidates:
         if os.path.exists(path):
-            return ImageFont.truetype(path, size)
-    return ImageFont.load_default()
+            try:
+                return ImageFont.truetype(path, size)
+            except OSError:
+                continue
+    try:
+        return ImageFont.load_default(size=size)
+    except TypeError:
+        return ImageFont.load_default()
+
+
+def _draw_text_right(
+    draw: ImageDraw.ImageDraw,
+    x: int,
+    y: int,
+    text: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    fill: tuple[int, int, int] | tuple[int, int, int, int],
+) -> None:
+    if isinstance(font, ImageFont.FreeTypeFont):
+        draw.text((x, y), text, font=font, fill=fill, anchor="ra")
+    else:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_w = bbox[2] - bbox[0]
+        draw.text((x - text_w, y), text, font=font, fill=fill)
 
 
 def _extract_cow_rgba(frame_rgba: Image.Image) -> Image.Image:
@@ -79,14 +107,15 @@ def _build_base_chassis(w: int, h: int, font_b: ImageFont.ImageFont, font_r: Ima
     draw = ImageDraw.Draw(base)
 
     draw.rounded_rectangle([0, 0, w - 1, h - 1], radius=14, fill=CHASSIS_BG, outline=CHASSIS_STROKE, width=2)
-    draw.rounded_rectangle([12, 12, w - 13, h - 13], radius=9, fill=SCREEN_BG, outline=SCREEN_STROKE, width=1)
+    draw.rounded_rectangle([12, 12, w - 13, h - 13], radius=9, fill=SCREEN_BG)
 
     draw.rounded_rectangle([12, 12, w - 13, 40], radius=9, fill=SCREEN_BAR)
     draw.rectangle([12, 28, w - 13, 40], fill=SCREEN_BAR)
     draw.line([12, 40, w - 13, 40], fill=SCREEN_STROKE, width=1)
+    draw.rounded_rectangle([12, 12, w - 13, h - 13], radius=9, outline=SCREEN_STROKE, width=1)
 
     draw.text((38, 20), "MOOD // Polish Cow", font=font_b, fill=BLUE_CORE)
-    draw.text((w - 24, 21), "VIBING", font=font_r, fill=BLUE_MID, anchor="ra")
+    _draw_text_right(draw, w - 24, 21, "VIBING", font_r, BLUE_MID)
 
     draw.line([22, 322, w - 22, 322], fill=PANEL_DIVIDER, width=1)
     draw.text((24, 328), "> status:", font=font_b, fill=BLUE_CORE)
@@ -94,14 +123,22 @@ def _build_base_chassis(w: int, h: int, font_b: ImageFont.ImageFont, font_r: Ima
     return base
 
 
-def _build_blue_palette(sample_rgb: Image.Image) -> Image.Image:
-    """Create a deterministic shared 64-color GitHub Blue palette for GIF frames."""
-    return sample_rgb.quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+def _build_blue_palette(rgb_frames: list[Image.Image]) -> Image.Image:
+    """Create a deterministic shared 64-color GitHub Blue palette across sampled GIF frames."""
+    if len(rgb_frames) == 1:
+        sample = rgb_frames[0]
+    else:
+        indices = sorted({round(i * (len(rgb_frames) - 1) / 3) for i in range(4)})
+        w, h = rgb_frames[0].size
+        sample = Image.new("RGB", (w, h * len(indices)))
+        for row, frame_idx in enumerate(indices):
+            sample.paste(rgb_frames[frame_idx], (0, row * h))
+    return sample.quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
 
 
 def render_cow_crt(
-    src_path: str | Path = "media/images/mood-cow.webp",
-    out_path: str | Path = "media/images/polish-cow-crt.gif",
+    src_path: str | Path = DEFAULT_SRC,
+    out_path: str | Path = DEFAULT_OUT,
 ) -> Path:
     """Render Polish Cow frames inside a compact 350x356 GitHub Blue CRT GIF."""
     w, h = 350, 356
@@ -109,7 +146,11 @@ def render_cow_crt(
     font_r = _load_font(10, bold=False)
 
     base = _build_base_chassis(w, h, font_b, font_r)
-    src = Image.open(src_path)
+    with Image.open(src_path) as src:
+        raw_frames = [f.copy() for f in ImageSequence.Iterator(src)]
+
+    if not raw_frames:
+        raise ValueError("Source image contains no frames")
 
     scan = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     s_arr = np.asarray(scan, dtype=np.uint8).copy()
@@ -123,14 +164,16 @@ def render_cow_crt(
         [7, 10, 5, 11],
     ]
 
-    raw_frames = [f.copy() for f in ImageSequence.Iterator(src)]
-    total_f = max(1, len(raw_frames))
+    total_f = len(raw_frames)
     rgb_frames: list[Image.Image] = []
 
     for idx, raw_frame in enumerate(raw_frames):
         cow = _extract_cow_rgba(raw_frame)
+        if cow.width <= 0 or cow.height <= 0:
+            raise ValueError("Source frame must have non-zero dimensions")
         scale = min(262 / cow.width, 224 / cow.height)
-        nw, nh = round(cow.width * scale), round(cow.height * scale)
+        nw = max(1, round(cow.width * scale))
+        nh = max(1, round(cow.height * scale))
         cow_resized = cow.resize((nw, nh), Image.Resampling.LANCZOS)
 
         cx = (w - nw) // 2
@@ -165,12 +208,12 @@ def render_cow_crt(
             bx = w - 84 + b_i * 5
             by = 339 - bh
             fdraw.rectangle([bx, by, bx + 3, 339], fill=(*BLUE_CORE, 235))
-        fdraw.text((w - 24, 329), "[GIF]", font=font_r, fill=BLUE_DIM, anchor="ra")
+        _draw_text_right(fdraw, w - 24, 329, "[GIF]", font_r, BLUE_DIM)
 
         canvas = Image.alpha_composite(canvas, scan_overlay)
         rgb_frames.append(canvas.convert("RGB"))
 
-    palette_ref = _build_blue_palette(rgb_frames[0])
+    palette_ref = _build_blue_palette(rgb_frames)
     paletted_frames = [
         fr.quantize(palette=palette_ref, dither=Image.Dither.NONE)
         for fr in rgb_frames
@@ -190,7 +233,7 @@ def render_cow_crt(
 
 
 if __name__ == "__main__":
-    src_arg = sys.argv[1] if len(sys.argv) > 1 else "media/images/mood-cow.webp"
-    out_arg = sys.argv[2] if len(sys.argv) > 2 else "media/images/polish-cow-crt.gif"
+    src_arg = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SRC
+    out_arg = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_OUT
     out_file = render_cow_crt(src_arg, out_arg)
     print(f"Generated {out_file}")

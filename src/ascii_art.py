@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import math
 from pathlib import Path
 import sys
 
@@ -19,13 +20,27 @@ from crt_svg import (
     _crt_defs,
 )
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_SRC = REPO_ROOT / "media" / "images" / "currents-cover.jpg"
+DEFAULT_OUT = REPO_ROOT / "media" / "svg" / "currents_crt.svg"
+
 RAMP = " .:-=+*#%@"
 
 
+def _clamp_unit(val: float) -> float:
+    return 0.0 if not math.isfinite(val) else max(0.0, min(1.0, val))
+
+
+def _ramp_char(val: float) -> str:
+    idx = min(len(RAMP) - 1, max(0, int(_clamp_unit(val) * (len(RAMP) - 1))))
+    return RAMP[idx]
+
+
 def _tier_color(val: float) -> str:
-    if val >= 0.72:
+    safe_val = _clamp_unit(val)
+    if safe_val >= 0.72:
         return ACCENT_BRIGHT
-    if val >= 0.38:
+    if safe_val >= 0.38:
         return ACCENT_CORE
     return ACCENT_MID
 
@@ -36,17 +51,19 @@ def _build_spans(row_vals: np.ndarray, row_y: float, x_off: float, cw: float) ->
     n = len(row_vals)
     idx = 0
     while idx < n:
-        ch = RAMP[int(row_vals[idx] * (len(RAMP) - 1))]
+        val = _clamp_unit(float(row_vals[idx]))
+        ch = _ramp_char(val)
         if ch == " ":
             idx += 1
             continue
-        tier = _tier_color(float(row_vals[idx]))
+        tier = _tier_color(val)
         start = idx
         chars = [ch]
         idx += 1
         while idx < n:
-            nxt = RAMP[int(row_vals[idx] * (len(RAMP) - 1))]
-            if nxt == " " or _tier_color(float(row_vals[idx])) != tier:
+            nxt_val = _clamp_unit(float(row_vals[idx]))
+            nxt = _ramp_char(nxt_val)
+            if nxt == " " or _tier_color(nxt_val) != tier:
                 break
             chars.append(nxt)
             idx += 1
@@ -60,16 +77,19 @@ def _build_spans(row_vals: np.ndarray, row_y: float, x_off: float, cw: float) ->
 
 
 def render_currents_crt(
-    src_path: str | Path = "media/images/currents-cover.jpg",
-    out_path: str | Path = "media/svg/currents_crt.svg",
+    src_path: str | Path = DEFAULT_SRC,
+    out_path: str | Path = DEFAULT_OUT,
 ) -> str:
     """Convert image into a compact GitHub Blue CRT ASCII terminal SVG (350x356)."""
     w, h = 350, 356
     prefix = "cur"
     cols, cw, lh, fs = 76, 3.55, 5.1, 5.4
 
-    im = Image.open(src_path).convert("L")
-    rows = min(53, round(cols * im.height / im.width * (cw / lh)))
+    with Image.open(src_path) as raw_im:
+        im = raw_im.convert("L")
+    if im.width <= 0 or im.height <= 0:
+        raise ValueError("Source image must have non-zero dimensions")
+    rows = max(1, min(53, round(cols * im.height / im.width * (cw / lh))))
 
     im_sharp = im.filter(ImageFilter.UnsharpMask(radius=4, percent=180, threshold=2))
     im_eq = ImageOps.autocontrast(im_sharp, cutoff=2)
@@ -157,7 +177,7 @@ text{{font-family:{FONT_STACK}}}
 
 
 if __name__ == "__main__":
-    src = sys.argv[1] if len(sys.argv) > 1 else "media/images/currents-cover.jpg"
-    out = sys.argv[2] if len(sys.argv) > 2 else "media/svg/currents_crt.svg"
+    src = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SRC
+    out = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_OUT
     render_currents_crt(src, out)
     print(f"Generated {out}")

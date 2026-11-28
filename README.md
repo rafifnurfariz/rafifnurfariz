@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="media/svg/crt_bios.svg" alt="Retro CRT Amber BIOS &amp; CMD Profile" width="835" />
+<img src="media/svg/crt_bios.svg" alt="GitHub Blue CRT BIOS &amp; CMD Profile" width="835" />
 
 <br/>
 
@@ -16,6 +16,6 @@
 
 <br/>
 
-<img src="media/svg/btop_telemetry.svg" alt="Retro CRT Amber GitHub Stats &amp; Projects" width="835" />
+<img src="media/svg/btop_telemetry.svg" alt="GitHub Blue CRT Stats &amp; Projects" width="835" />
 
 </div>
