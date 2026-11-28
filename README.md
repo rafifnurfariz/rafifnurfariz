@@ -16,7 +16,7 @@
 
 <br/>
 
-<img src="media/svg/btop_telemetry.svg" alt="GitHub Blue Stats &amp; Activity" width="835" />
+<img src="media/svg/btop_telemetry.svg?v=2" alt="GitHub Blue Stats &amp; Activity" width="835" />
 
 <br/>
 
