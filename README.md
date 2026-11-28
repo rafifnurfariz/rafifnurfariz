@@ -1,33 +1,29 @@
 <div align="center">
 
-<img src="media/svg/header.svg" alt="Rafif Nurfariz - Beginner Programmer" width="835" />
+<img src="media/svg/crt_bios.svg" alt="Retro CRT Amber BIOS &amp; Neofetch Terminal" width="860" />
+
+<br/>
+
+<img src="media/svg/btop_telemetry.svg" alt="Retro CRT Amber btop GitHub Telemetry" width="860" />
+
+<br/>
 
 <p>
-  <a href="https://www.instagram.com/rapip1241/" title="Instagram"><img src="media/icons/instagram.svg" width="28" height="28" alt="Instagram" /></a>&nbsp;&nbsp;&nbsp;<a href="https://www.tiktok.com/@rapip1241" title="TikTok"><img src="media/icons/tiktok.svg" width="28" height="28" alt="TikTok" /></a>
+  <img src="media/svg/currents_crt.svg" alt="Tame Impala - Currents ASCII CRT" width="424" />
+  &nbsp;&nbsp;
+  <img src="media/images/polish-cow-crt.gif" alt="Polish Cow Retro CRT GIF" width="424" />
 </p>
 
-<br>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=2" />
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-light.svg?v=2" />
-  <img alt="Pac-Man contribution graph" src="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=2" width="835" />
-</picture>
-
-<br><br>
+<br/>
 
 <p>
-  <img src="media/svg/neofetch.svg" alt="Neofetch profile" width="400" />
+  <a href="https://photopip.vercel.app" title="Photopip Live App"><img src="media/svg/btn_web.svg" alt="app://photopip.vercel.app" height="34" /></a>
   &nbsp;
-  <img src="media/svg/currents.svg" alt="Tame Impala - Currents ASCII" width="425" />
+  <a href="https://github.com/rafifnurfariz?tab=repositories" title="GitHub Repositories"><img src="media/svg/btn_repos.svg" alt="gh://rafifnurfariz/repos" height="34" /></a>
+  &nbsp;
+  <a href="https://www.instagram.com/rapip1241/" title="Instagram"><img src="media/svg/btn_ig.svg" alt="ig://@rapip1241" height="34" /></a>
+  &nbsp;
+  <a href="https://www.tiktok.com/@rapip1241" title="TikTok"><img src="media/svg/btn_tt.svg" alt="tt://@rapip1241" height="34" /></a>
 </p>
-
-<br>
-
-<img src="media/svg/stack.svg" alt="Tech Stack" width="835" />
-
-<br><br>
-
-<img src="media/images/mood-cow.webp" width="145" alt="Dancing cow" />
 
 </div>

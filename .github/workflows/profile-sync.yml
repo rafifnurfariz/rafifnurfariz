@@ -1,8 +1,13 @@
-name: Sync Tech Stack & Neofetch Card
+name: Sync CRT Amber Profile Telemetry
 
 on:
   schedule:
     - cron: "15 0 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
   workflow_dispatch:
 
 permissions:
@@ -15,13 +20,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+      - run: python -m unittest discover -s tests
       - run: python src/sync_profile.py ${{ github.repository_owner }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           git config user.name "rafifnurfariz"
           git config user.email "mochrafif9@gmail.com"
-          git add media/svg/neofetch.svg media/svg/stack.svg
-          git diff --staged --quiet || git commit -m "chore: sync stack & languages [skip ci]"
+          git add media/svg/*.svg
+          git diff --staged --quiet || git commit -m "chore: sync crt amber telemetry [skip ci]"
           git push
