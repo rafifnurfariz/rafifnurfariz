@@ -47,8 +47,21 @@ def clamp_text(text: str, max_len: int) -> str:
     return clean[: max_len - 3].rstrip() + "..."
 
 
+def _safe_nonneg_int(value: object) -> int:
+    if isinstance(value, bool) or value is None:
+        return 0
+    if isinstance(value, int):
+        return max(0, value)
+    if isinstance(value, float):
+        return max(0, int(value)) if math.isfinite(value) else 0
+    try:
+        return max(0, int(str(value).strip()))
+    except ValueError:
+        return 0
+
+
 def fmt_bytes(byte_count: int) -> str:
-    val = max(0, int(byte_count))
+    val = _safe_nonneg_int(byte_count)
     if val == 0:
         return "0.0 KB"
     if val >= 1_073_741_824:
@@ -59,7 +72,7 @@ def fmt_bytes(byte_count: int) -> str:
 
 
 def fmt_repo_kb(size_kb: int) -> str:
-    val = max(0, int(size_kb))
+    val = _safe_nonneg_int(size_kb)
     if val >= 1_048_576:
         return f"{val / 1_048_576:.1f} GB"
     if val >= 1024:
@@ -68,7 +81,7 @@ def fmt_repo_kb(size_kb: int) -> str:
 
 
 def fmt_uptime(days: int) -> str:
-    val = max(0, int(days))
+    val = _safe_nonneg_int(days)
     if val >= 365:
         years, rem = divmod(val, 365)
         return f"{years}y {rem}d"
@@ -169,10 +182,11 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
 
     lang_list = " · ".join(name for name, _ in t.languages[:4]) or "Learning Code"
     stack_list = " · ".join(t.stacks[:4]) or lang_list
+    safe_public_repos = _safe_nonneg_int(t.public_repos)
     projects_summary = (
-        f"{t.public_repos:02d} public repositories (e.g. {clamp_text(top_project.name, 16)})"
+        f"{safe_public_repos:02d} public repositories (e.g. {clamp_text(top_project.name, 16)})"
         if top_project is not None
-        else f"{t.public_repos:02d} public repositories"
+        else f"{safe_public_repos:02d} public repositories"
     )
 
     info_rows = [
@@ -326,13 +340,15 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
         f"Updated {t.synced_at}",
     )
 
-    p1 = _panel_box(22, 58, 424, 190, "TOP LANGUAGES & TOOLS", fmt_bytes(t.total_bytes))
-    total_b = max(1, t.total_bytes)
+    lang_sum = sum(_safe_nonneg_int(b_val) for _, b_val in t.languages)
+    effective_total = _safe_nonneg_int(t.total_bytes) or lang_sum
+    p1 = _panel_box(22, 58, 424, 190, "TOP LANGUAGES & TOOLS", fmt_bytes(effective_total))
+    total_b = max(1, effective_total)
     top_langs = t.languages[:4] if t.languages else [("Exploring", 0)]
     lang_rows = []
     for idx, (lang, b_val) in enumerate(top_langs):
-        safe_b = max(0, int(b_val))
-        pct = min(100.0, (safe_b / total_b) * 100.0) if t.total_bytes > 0 else 0.0
+        safe_b = _safe_nonneg_int(b_val)
+        pct = min(100.0, (safe_b / total_b) * 100.0) if effective_total > 0 else 0.0
         ry = 86 + idx * 28
         delay = 0.08 + idx * 0.07
         lang_rows.append(
@@ -364,9 +380,9 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
 
     p2 = _panel_box(458, 58, 380, 190, "GITHUB OVERVIEW", "LIVE")
     kv_pairs = [
-        ("REPOS", f"{max(0, t.public_repos):02d}", "CODE SIZE", fmt_bytes(t.total_bytes)),
-        ("STARS", f"{max(0, t.total_stars):02d}", "FORKS", f"{max(0, t.total_forks):02d}"),
-        ("FOLLOWERS", f"{max(0, t.followers):02d}", "ACTIVE", fmt_uptime(t.uptime_days)),
+        ("REPOS", f"{_safe_nonneg_int(t.public_repos):02d}", "CODE SIZE", fmt_bytes(effective_total)),
+        ("STARS", f"{_safe_nonneg_int(t.total_stars):02d}", "FORKS", f"{_safe_nonneg_int(t.total_forks):02d}"),
+        ("FOLLOWERS", f"{_safe_nonneg_int(t.followers):02d}", "ACTIVE", fmt_uptime(t.uptime_days)),
     ]
     kv_svg = []
     for r_i, (k1, v1, k2, v2) in enumerate(kv_pairs):
@@ -378,7 +394,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
             f'<text x="822" y="{ry}" text-anchor="end" class="val-hi">{esc(v2)}</text>'
         )
 
-    raw_series = [max(0, int(v)) for v in (t.push_series or [])]
+    raw_series = [_safe_nonneg_int(v) for v in (t.push_series or [])]
     if len(raw_series) >= 14:
         series = raw_series[-14:]
     else:

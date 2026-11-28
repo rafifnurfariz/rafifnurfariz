@@ -118,8 +118,10 @@ def _build_base_chassis(w: int, h: int, font_b: ImageFont.ImageFont, font_r: Ima
     _draw_text_right(draw, w - 24, 21, "VIBING", font_r, BLUE_MID)
 
     draw.line([22, 322, w - 22, 322], fill=PANEL_DIVIDER, width=1)
-    draw.text((24, 328), "> status:", font=font_b, fill=BLUE_CORE)
-    draw.text((84, 328), "coding & vibing", font=font_r, fill=BLUE_BRIGHT)
+    status_label = "> status:"
+    draw.text((24, 328), status_label, font=font_b, fill=BLUE_CORE)
+    status_bbox = draw.textbbox((24, 328), status_label, font=font_b)
+    draw.text((max(84, status_bbox[2] + 5), 328), "coding & vibing", font=font_r, fill=BLUE_BRIGHT)
     return base
 
 

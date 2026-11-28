@@ -5,34 +5,65 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: contrib-pacman-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   generate:
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Generate pacman-contribution-graph.svg
         uses: abozanona/pacman-contribution-graph@main
         with:
           github_user_name: ${{ github.repository_owner }}
 
-      - name: Apply GitHub Blue CRT theme and entrance animation
+      - name: Upload generated SVGs
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacman-svgs
+          path: dist/*.svg
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: generate
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download generated SVGs
+        uses: actions/download-artifact@v4
+        with:
+          name: pacman-svgs
+          path: dist
+
+      - name: Apply GitHub Blue CRT theme and validate XML
         run: python src/theme_pacman.py dist
 
       - name: Push SVGs to output branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           cd dist
+          test -s pacman-contribution-graph-dark.svg
           git init -b output
           git config user.name "rafifnurfariz"
           git config user.email "mochrafif9@gmail.com"
-          git add .
+          git add -- *.svg
           git commit -m "chore: update blue pacman contribution graph [skip ci]"
-          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          git push --force origin output
+          AUTH_B64=$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)
+          git -c "http.extraHeader=AUTHORIZATION: basic $AUTH_B64" \
+            push --force "https://github.com/$GITHUB_REPOSITORY.git" output

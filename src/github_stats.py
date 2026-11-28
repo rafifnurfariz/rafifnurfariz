@@ -109,8 +109,28 @@ class ProfileTelemetry:
 
 
 GITHUB_API_HOST = "api.github.com"
+MAX_API_RESPONSE_BYTES = 5 * 1024 * 1024
 _NEXT_LINK_RE = re.compile(r'<([^>]+)>;\s*rel="next"')
 _REQ_PKG_RE = re.compile(r"^\s*([a-z0-9][a-z0-9._-]*)")
+
+
+def _safe_nonneg_int(value: object, default: int = 0) -> int:
+    if isinstance(value, bool) or value is None:
+        return default
+    if isinstance(value, int):
+        return max(0, value)
+    if isinstance(value, float):
+        return max(0, int(value)) if value == value and abs(value) != float("inf") else default
+    if isinstance(value, str):
+        try:
+            return max(0, int(value.strip()))
+        except ValueError:
+            return default
+    return default
+
+
+def _clean_str(value: object) -> str:
+    return value.strip() if isinstance(value, str) else ""
 
 
 class _SafeGitHubRedirectHandler(urllib.request.HTTPRedirectHandler):
@@ -129,8 +149,20 @@ _OPENER = urllib.request.build_opener(_SafeGitHubRedirectHandler)
 
 
 def _is_allowed_api_url(url: str) -> bool:
+    if not isinstance(url, str):
+        return False
     parsed = urllib.parse.urlparse(url)
-    return parsed.scheme == "https" and (parsed.hostname or "").lower() == GITHUB_API_HOST
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+    return (
+        parsed.scheme == "https"
+        and (parsed.hostname or "").lower() == GITHUB_API_HOST
+        and port in (None, 443)
+        and parsed.username is None
+        and parsed.password is None
+    )
 
 
 def _api_request(url: str, token: str = "") -> tuple[dict | list | None, str | None]:
@@ -146,7 +178,10 @@ def _api_request(url: str, token: str = "") -> tuple[dict | list | None, str | N
     req = urllib.request.Request(url, headers=headers)
     try:
         with _OPENER.open(req, timeout=20) as resp:
-            raw = resp.read().decode("utf-8")
+            raw_bytes = resp.read(MAX_API_RESPONSE_BYTES + 1)
+            if len(raw_bytes) > MAX_API_RESPONSE_BYTES:
+                return None, None
+            raw = raw_bytes.decode("utf-8")
             data = json.loads(raw)
             link_header = resp.headers.get("Link") or ""
             match = _NEXT_LINK_RE.search(link_header)
@@ -171,11 +206,13 @@ def api_get(url: str, token: str = "") -> dict | list | None:
 
 
 def _api_get_paginated_list(url: str, token: str = "", max_pages: int = 5) -> list | None:
-    """Fetch a paginated JSON list from GitHub REST API."""
+    """Fetch a paginated JSON list from GitHub REST API without looping on repeated links."""
     items: list = []
     next_url: str | None = url
+    seen_urls: set[str] = set()
     pages = 0
-    while next_url and pages < max_pages:
+    while next_url and pages < max_pages and next_url not in seen_urls:
+        seen_urls.add(next_url)
         data, next_url = _api_request(next_url, token)
         if not isinstance(data, list):
             return items if pages > 0 else None
@@ -186,13 +223,16 @@ def _api_get_paginated_list(url: str, token: str = "", max_pages: int = 5) -> li
 
 def get_file_text(owner: str, repo: str, path: str, token: str = "") -> str:
     """Read a repository file via GitHub Contents API."""
+    clean_parts = [part for part in str(path).strip("/").split("/") if part]
+    if not clean_parts or any(part in (".", "..") for part in clean_parts):
+        return ""
     q_owner = urllib.parse.quote(owner, safe="")
     q_repo = urllib.parse.quote(repo, safe="")
-    q_path = urllib.parse.quote(path, safe="/")
+    q_path = "/".join(urllib.parse.quote(part, safe="") for part in clean_parts)
     data = api_get(f"https://api.github.com/repos/{q_owner}/{q_repo}/contents/{q_path}", token)
     if isinstance(data, dict) and data.get("encoding") == "base64":
         content = data.get("content")
-        if isinstance(content, str) and content:
+        if isinstance(content, str) and content and len(content) <= 2_000_000:
             try:
                 return base64.b64decode(content).decode("utf-8", errors="ignore")
             except (ValueError, TypeError):
@@ -280,7 +320,7 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
     repo_rows: list[tuple[str, RepoSummary]] = []
     total_stars = 0
     total_forks = 0
-    homepage = (user_data.get("blog") or "").strip()
+    homepage = _clean_str(user_data.get("blog"))
 
     def add_stack(label: str) -> None:
         if label not in stacks:
@@ -289,17 +329,17 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
     for repo in repos_data:
         if not isinstance(repo, dict) or repo.get("fork"):
             continue
-        name = str(repo.get("name") or "").strip()
+        name = _clean_str(repo.get("name"))
         if not name:
             continue
         q_repo = urllib.parse.quote(name, safe="")
         is_profile = name.lower() == clean_user.lower()
-        stars = max(0, int(repo.get("stargazers_count") or 0))
-        forks = max(0, int(repo.get("forks_count") or 0))
+        stars = _safe_nonneg_int(repo.get("stargazers_count"))
+        forks = _safe_nonneg_int(repo.get("forks_count"))
         total_stars += stars
         total_forks += forks
 
-        repo_home = (repo.get("homepage") or "").strip()
+        repo_home = _clean_str(repo.get("homepage"))
         if repo_home and not homepage:
             homepage = repo_home
 
@@ -310,8 +350,8 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
         repo_code_bytes = 0
         if isinstance(langs, dict):
             for lang, b_count in langs.items():
-                if isinstance(lang, str) and isinstance(b_count, (int, float)) and not isinstance(b_count, bool):
-                    val = int(b_count)
+                if isinstance(lang, str):
+                    val = _safe_nonneg_int(b_count)
                     if val > 0:
                         repo_code_bytes += val
                         lang_bytes[lang] = lang_bytes.get(lang, 0) + val
@@ -355,9 +395,9 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
                 pushed_sort,
                 RepoSummary(
                     name=name,
-                    description=(repo.get("description") or "").strip(),
-                    language=repo.get("language") or "Mixed",
-                    size_kb=max(0, int(repo.get("size") or 0)),
+                    description=_clean_str(repo.get("description")),
+                    language=_clean_str(repo.get("language")) or "Mixed",
+                    size_kb=_safe_nonneg_int(repo.get("size")),
                     code_bytes=repo_code_bytes,
                     stars=stars,
                     forks=forks,
@@ -436,26 +476,25 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
     # Pick latest commit per repository first so one busy repo doesn't hide other projects
     recent_commits: list[CommitEntry] = []
     seen_repos: set[str] = set()
-    chosen_keys: set[tuple[str, str]] = set()
+    chosen_ids: set[int] = set()
     for c in all_commits:
         if c.repo not in seen_repos:
             seen_repos.add(c.repo)
-            chosen_keys.add((c.repo, c.sha))
+            chosen_ids.add(id(c))
             recent_commits.append(c)
     for c in all_commits:
         if len(recent_commits) >= 3:
             break
-        key = (c.repo, c.sha)
-        if key not in chosen_keys:
-            chosen_keys.add(key)
+        if id(c) not in chosen_ids:
+            chosen_ids.add(id(c))
             recent_commits.append(c)
     recent_commits.sort(key=lambda c: c.timestamp or c.date, reverse=True)
 
     push_series, recent_push_count = _build_commit_series(commit_dts, now)
 
-    resolved_login = (user_data.get("login") or "").strip() or clean_user
-    display_name = (user_data.get("name") or "").strip() or resolved_login
-    location = (user_data.get("location") or "").strip() or "Indonesia"
+    resolved_login = _clean_str(user_data.get("login")) or clean_user
+    display_name = _clean_str(user_data.get("name")) or resolved_login
+    location = _clean_str(user_data.get("location")) or "Indonesia"
     raw_public_repos = user_data.get("public_repos")
     public_repos = (
         max(0, raw_public_repos)
@@ -466,14 +505,14 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
     return ProfileTelemetry(
         username=resolved_login,
         display_name=display_name,
-        bio=(user_data.get("bio") or "").strip(),
+        bio=_clean_str(user_data.get("bio")),
         location=location,
         homepage=homepage,
         created_at=created_dt.strftime("%Y-%m-%d"),
         uptime_days=uptime_days,
         public_repos=public_repos,
-        followers=max(0, int(user_data.get("followers") or 0)),
-        following=max(0, int(user_data.get("following") or 0)),
+        followers=_safe_nonneg_int(user_data.get("followers")),
+        following=_safe_nonneg_int(user_data.get("following")),
         total_stars=total_stars,
         total_forks=total_forks,
         total_bytes=sum(lang_bytes.values()),

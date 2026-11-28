@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 import sys
+import xml.etree.ElementTree as ET
 
 DARK_BLUE_MAP: dict[str, str] = {
     "#0e4429": "#0c2d6b",
@@ -22,32 +23,102 @@ LIGHT_BLUE_MAP: dict[str, str] = {
 }
 
 FONT_STACK = "'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace"
+_SVG_OPEN_RE = re.compile(r"<svg\b[^>]*>", re.IGNORECASE | re.DOTALL)
+_G_TAG_RE = re.compile(r"<(/?)g\b([^>]*)>", re.IGNORECASE)
+_BG_RECT_RE = re.compile(r"<rect\b[^>]*>", re.IGNORECASE)
 
 
 def _remap_colors(svg: str, color_map: dict[str, str]) -> str:
-    pattern = re.compile("|".join(re.escape(k) for k in color_map), re.IGNORECASE)
+    keys = "|".join(re.escape(k) for k in color_map)
+    pattern = re.compile(rf"(?:{keys})(?![0-9a-fA-F])", re.IGNORECASE)
     return pattern.sub(lambda m: color_map[m.group(0).lower()], svg)
+
+
+def _unwrap_single_pac_in(inner: str) -> str:
+    """Unwrap an outer <g class="pac-in">...</g> only if it spans the whole body."""
+    stripped = inner.strip()
+    open_prefix = '<g class="pac-in">'
+    if not stripped.startswith(open_prefix) or not stripped.endswith("</g>"):
+        return inner
+
+    depth = 0
+    for idx, match in enumerate(_G_TAG_RE.finditer(stripped)):
+        is_close = bool(match.group(1))
+        attrs = match.group(2)
+        if not is_close:
+            if attrs.rstrip().endswith("/"):
+                continue
+            depth += 1
+        else:
+            depth -= 1
+            if depth == 0:
+                if match.end() == len(stripped):
+                    return stripped[len(open_prefix) : match.start()]
+                return inner
+        if idx > 10000:
+            break
+    return inner
+
+
+def _strip_dark_bg_rect(inner: str) -> str:
+    """Remove the first full-bleed #0d1117 background <rect> regardless of attribute order."""
+    for match in _BG_RECT_RE.finditer(inner):
+        tag = match.group(0)
+        if (
+            re.search(r'\bwidth=["\']100%["\']', tag, re.IGNORECASE)
+            and re.search(r'\bheight=["\']100%["\']', tag, re.IGNORECASE)
+            and re.search(r'\bfill=["\']#0d1117["\']', tag, re.IGNORECASE)
+        ):
+            end = match.end()
+            if not tag.rstrip().endswith("/>"):
+                close_m = re.match(r"\s*</rect>", inner[end:], re.IGNORECASE)
+                if close_m:
+                    end += close_m.end()
+            return inner[: match.start()] + inner[end:]
+    return inner
 
 
 def _clean_inner_body(inner: str) -> str:
     """Strip legacy wrappers and redundant 100% background rect before framing."""
-    inner = re.sub(r"<style>\.pac-in\{.*?</style>", "", inner, count=1, flags=re.DOTALL)
-    if inner.startswith('<g class="pac-in">') and inner.endswith("</g>"):
-        inner = inner[len('<g class="pac-in">') : -len("</g>")]
-    inner = re.sub(
-        r'<rect\s+width="100%"\s+height="100%"\s+fill="#0d1117"\s*/?>',
-        "",
-        inner,
-        count=1,
-        flags=re.IGNORECASE,
-    )
+    inner = re.sub(r"<style[^>]*>\.pac-in\{.*?</style>", "", inner, count=1, flags=re.DOTALL | re.IGNORECASE)
+    inner = _unwrap_single_pac_in(inner)
+    inner = _strip_dark_bg_rect(inner)
     return inner
+
+
+def _extract_svg_dimensions(open_tag: str) -> tuple[float, float]:
+    w_match = re.search(r'\bwidth=["\'](\d+(?:\.\d+)?)(?:px)?["\']', open_tag, re.IGNORECASE)
+    h_match = re.search(r'\bheight=["\'](\d+(?:\.\d+)?)(?:px)?["\']', open_tag, re.IGNORECASE)
+    if w_match and h_match:
+        w_val, h_val = float(w_match.group(1)), float(h_match.group(1))
+        if w_val > 0 and h_val > 0:
+            return w_val, h_val
+
+    vb_match = re.search(
+        r'\bviewBox=["\']\s*[-\d.]+\s+[-\d.]+\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*["\']',
+        open_tag,
+        re.IGNORECASE,
+    )
+    if vb_match:
+        vb_w, vb_h = float(vb_match.group(1)), float(vb_match.group(2))
+        if vb_w > 0 and vb_h > 0:
+            return vb_w, vb_h
+
+    return 1166.0, 184.0
 
 
 def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
     """Recolor contribution tiles & walls to GitHub Blue inside a unified 860px CRT card."""
+    if dark and 'data-crt-blue="2"' in svg_text:
+        return svg_text
+
     color_map = DARK_BLUE_MAP if dark else LIGHT_BLUE_MAP
     recolored = _remap_colors(svg_text, color_map)
+
+    open_match = _SVG_OPEN_RE.search(recolored)
+    close_start = recolored.rfind("</svg>")
+    if open_match is None or close_start == -1 or close_start <= open_match.end():
+        return recolored
 
     if not dark:
         if "pac-in" not in recolored:
@@ -58,35 +129,28 @@ def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
                 "@media(prefers-reduced-motion:reduce){.pac-in{animation:none;opacity:1;transform:none}}</style>"
                 '<g class="pac-in">'
             )
-            recolored = recolored.replace(">", ">" + css, 1)
-            end_idx = recolored.rfind("</svg>")
-            if end_idx != -1:
-                recolored = recolored[:end_idx] + "</g>" + recolored[end_idx:]
+            recolored = (
+                recolored[: open_match.end()]
+                + css
+                + recolored[open_match.end() : close_start]
+                + "</g>"
+                + recolored[close_start:]
+            )
         return recolored
 
-    if 'data-crt-blue="2"' in recolored:
-        return recolored
-
-    open_end = recolored.find(">")
-    close_start = recolored.rfind("</svg>")
-    if open_end == -1 or close_start == -1:
-        return recolored
-
-    open_tag = recolored[: open_end + 1]
-    w_match = re.search(r'width="(\d+(?:\.\d+)?)"', open_tag)
-    h_match = re.search(r'height="(\d+(?:\.\d+)?)"', open_tag)
-    inner_w = float(w_match.group(1)) if w_match else 1166.0
-    inner_h = float(h_match.group(1)) if h_match else 184.0
-
-    inner_body = _clean_inner_body(recolored[open_end + 1 : close_start])
+    open_tag = open_match.group(0)
+    inner_w, inner_h = _extract_svg_dimensions(open_tag)
+    inner_body = _clean_inner_body(recolored[open_match.end() : close_start])
 
     # Match exact 860px coordinate system of crt_bios.svg & btop_telemetry.svg
     w, h = 860, 196
     inner_scr_w, inner_scr_h = w - 24, h - 24
-    target_w = 804.0
-    scale = target_w / max(1.0, inner_w)
+    max_content_w = 804.0
+    max_content_h = 132.0
+    scale = min(max_content_w / max(1.0, inner_w), max_content_h / max(1.0, inner_h))
+    scaled_w = inner_w * scale
     scaled_h = inner_h * scale
-    tx = (w - target_w) / 2.0
+    tx = (w - scaled_w) / 2.0
     ty = 42.0 + (142.0 - scaled_h) / 2.0
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" data-crt-blue="2">
@@ -113,10 +177,12 @@ def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
   <clipPath id="pac-scr"><rect x="12" y="12" width="{inner_scr_w}" height="{inner_scr_h}" rx="9"/></clipPath>
 </defs>
 <rect width="{w}" height="{h}" rx="14" fill="#090d13" stroke="#21262d" stroke-width="1.5"/>
-<rect x="12" y="12" width="{inner_scr_w}" height="{inner_scr_h}" rx="9" fill="#0d1117" stroke="#30363d" stroke-width="1.2"/>
-<rect x="12" y="12" width="{inner_scr_w}" height="30" rx="9" fill="#161b22"/>
-<rect x="12" y="30" width="{inner_scr_w}" height="12" fill="#161b22"/>
-<line x1="12" y1="42" x2="{w - 12}" y2="42" stroke="#30363d" stroke-width="1"/>
+<rect x="12" y="12" width="{inner_scr_w}" height="{inner_scr_h}" rx="9" fill="#0d1117"/>
+<g clip-path="url(#pac-scr)">
+  <rect x="12" y="12" width="{inner_scr_w}" height="30" fill="#161b22"/>
+  <line x1="12" y1="42" x2="{w - 12}" y2="42" stroke="#30363d" stroke-width="1"/>
+</g>
+<rect x="12" y="12" width="{inner_scr_w}" height="{inner_scr_h}" rx="9" fill="none" stroke="#30363d" stroke-width="1.2"/>
 <circle cx="28" cy="27" r="4" fill="#58a6ff" class="pac-led" filter="url(#pac-glow)"/>
 <text x="40" y="31" class="pac-bar-t">CMD // GitHub Contributions (Pac-Man)</text>
 <text x="{w - 26}" y="31" text-anchor="end" class="pac-bar-r">LIVE GRAPH</text>
@@ -131,10 +197,21 @@ def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
 
 
 def process_directory(dist_dir: str | Path = "dist") -> list[Path]:
+    target_dir = Path(dist_dir)
+    if not target_dir.is_dir():
+        raise FileNotFoundError(f"Pac-Man output directory not found: {target_dir}")
+
+    svg_files = sorted(target_dir.glob("*.svg"))
+    if not svg_files:
+        raise RuntimeError(f"No SVG files found in {target_dir}")
+
     updated: list[Path] = []
-    for path in sorted(Path(dist_dir).glob("*.svg")):
+    for path in svg_files:
         is_dark = "dark" in path.name.lower()
         themed = theme_pacman_svg(path.read_text(encoding="utf-8"), dark=is_dark)
+        root = ET.fromstring(themed)
+        if not root.tag.endswith("svg"):
+            raise ValueError(f"Themed output for {path.name} is not an SVG root element")
         path.write_text(themed, encoding="utf-8")
         updated.append(path)
     return updated

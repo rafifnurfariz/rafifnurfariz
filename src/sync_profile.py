@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 from crt_svg import render_bios_terminal, render_btop_telemetry, render_cli_button
 from github_stats import build_sample_telemetry, collect_telemetry
@@ -26,6 +27,11 @@ def generate_all(username: str, offline: bool = False, out_dir: Path = SVG_DIR) 
     ]
     for idx, (filename, label, icon) in enumerate(CLI_ENDPOINTS):
         rendered.append((filename, render_cli_button(label, icon, delay_s=idx * 0.06)))
+
+    for filename, svg_content in rendered:
+        root = ET.fromstring(svg_content)
+        if not root.tag.endswith("svg"):
+            raise ValueError(f"Generated {filename} does not have an <svg> root element")
 
     out_dir.mkdir(parents=True, exist_ok=True)
     for filename, svg_content in rendered:
