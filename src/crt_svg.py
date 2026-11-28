@@ -173,26 +173,23 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     lang_list = " · ".join(name for name, _ in t.languages[:4]) or "Learning Code"
     stack_list = " · ".join(t.stacks[:4]) or lang_list
 
-    # Deliberate ~5.8s BIOS loading phase that clears once and never repeats
+    # Quick ~1.1s BIOS flash that clears once and never repeats
     bios_lines = [
-        ("SYSTEM CHECK   : Developer Terminal Ready", "[OK]", 0.35),
-        ("MEMORY CHECK   : 65536K OK", "[PASS]", 0.85),
-        (f"USER PROFILE   : {t.display_name} (@{t.username})", "[FOUND]", 2.25),
-        (f"MAIN SKILLS    : {clamp_text(stack_list, 40)}", "[LOADED]", 2.95),
-        (f"PROJECTS SCAN  : {t.public_repos:02d} GitHub repositories ({top_name})", "[READY]", 3.65),
-        (f"CODE VOLUME    : {fmt_bytes(t.total_bytes)} written across repos", "[INDEXED]", 4.35),
-        ("DIAGNOSTIC     : All checks passed (0 errors)", "[DONE]", 5.05),
-        ("LAUNCHING CMD  : Opening profile info...", "", 5.55),
+        ("SYSTEM CHECK   : Developer Terminal Ready", "[OK]", 0.00),
+        ("MEMORY CHECK   : 65536K OK", "[PASS]", 0.15),
+        (f"USER PROFILE   : {t.display_name} (@{t.username})", "[FOUND]", 0.35),
+        ("LAUNCHING CMD  : whoami ...", "", 0.55),
     ]
 
     bios_rows_svg = []
     bios_delays_css = []
     for idx, (label, tag, delay_s) in enumerate(bios_lines):
         cls = f"bl{idx}"
-        bios_delays_css.append(
-            f".{cls}{{opacity:0;animation:fade-in 0.18s ease {delay_s:.2f}s forwards}}"
-        )
-        y_pos = 140 + idx * 26
+        if delay_s > 0:
+            bios_delays_css.append(
+                f".{cls}{{opacity:0;animation:fade-in 0.12s ease {delay_s:.2f}s forwards}}"
+            )
+        y_pos = 144 + idx * 30
         tag_svg = (
             f'<text x="816" y="{y_pos}" text-anchor="end" class="ok">{esc(tag)}</text>'
             if tag
@@ -219,9 +216,9 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     info_rows_svg = []
     for idx, (key, val) in enumerate(info_rows):
         cls = f"nl{idx}"
-        delay_s = 6.95 + idx * 0.12
+        delay_s = 1.55 + idx * 0.06
         info_delays_css.append(
-            f".{cls}{{opacity:0;transform:translateY(3px);animation:row-in 0.28s ease {delay_s:.2f}s forwards}}"
+            f".{cls}{{opacity:0;transform:translateY(3px);animation:row-in 0.22s ease {delay_s:.2f}s forwards}}"
         )
         y_pos = 186 + idx * 23
         info_rows_svg.append(
@@ -278,12 +275,12 @@ text{{font-family:{FONT_STACK}}}
 .note{{font-size:12px;fill:{AMBER_MID}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .cur-blink{{animation:cur-flash 1.05s steps(1,end) infinite}}
-.bios-phase{{animation:bios-exit 0.35s ease 6.00s forwards}}
-.tty-phase{{opacity:0;animation:fade-in 0.25s ease 6.25s forwards}}
-.mem-fill{{transform-origin:274px 159px;transform:scaleX(0.05);animation:mem-load 1.3s ease 0.90s forwards}}
-.cmd-clip-rect{{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.55s steps({len(cmd_text)},end) 6.35s forwards}}
-.type-cur{{opacity:0;animation:cur-slide 0.65s steps({len(cmd_text)},end) 6.30s forwards}}
-.bio-note{{opacity:0;animation:row-in 0.3s ease 7.85s forwards}}
+.bios-phase{{animation:bios-exit 0.20s ease 1.10s forwards}}
+.tty-phase{{opacity:0;animation:fade-in 0.20s ease 1.22s forwards}}
+.mem-fill{{transform-origin:274px 167px;transform:scaleX(0.05);animation:mem-load 0.55s ease 0.15s forwards}}
+.cmd-clip-rect{{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.35s steps({len(cmd_text)},end) 1.28s forwards}}
+.type-cur{{opacity:0;animation:cur-slide 0.40s steps({len(cmd_text)},end) 1.26s forwards}}
+.bio-note{{opacity:0;animation:row-in 0.22s ease 2.00s forwards}}
 {"".join(bios_delays_css)}
 {"".join(info_delays_css)}
 @keyframes fade-in{{to{{opacity:1}}}}
@@ -313,8 +310,8 @@ text{{font-family:{FONT_STACK}}}
     {_bios_chip_badge(756, 62)}
     {"".join(bios_rows_svg)}
     <g class="bl1">
-      <rect x="272" y="155" width="180" height="12" rx="2" fill="none" stroke="{AMBER_DIM}" stroke-width="1"/>
-      <rect x="274" y="157" width="176" height="8" rx="1" fill="{AMBER_CORE}" class="mem-fill" opacity="0.9"/>
+      <rect x="272" y="163" width="180" height="12" rx="2" fill="none" stroke="{AMBER_DIM}" stroke-width="1"/>
+      <rect x="274" y="165" width="176" height="8" rx="1" fill="{AMBER_CORE}" class="mem-fill" opacity="0.9"/>
     </g>
   </g>
 
