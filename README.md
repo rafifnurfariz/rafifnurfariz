@@ -20,10 +20,6 @@
 
 <br/>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=2" />
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-light.svg?v=2" />
-  <img alt="Pac-Man contribution graph" src="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=2" width="835" />
-</picture>
+<img src="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=3" alt="GitHub Blue Pac-Man Contribution Graph" width="835" />
 
 </div>

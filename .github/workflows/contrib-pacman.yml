@@ -13,25 +13,18 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Generate pacman-contribution-graph.svg
         uses: abozanona/pacman-contribution-graph@main
         with:
           github_user_name: ${{ github.repository_owner }}
 
-      - name: Add smooth entrance animation
-        run: |
-          python3 - <<'EOF'
-          import glob
-          css = "<style>.pac-in{opacity:0;transform:translateY(8px);animation:pacIn .7s cubic-bezier(.22,1,.36,1) .15s forwards}@keyframes pacIn{to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.pac-in{animation:none;opacity:1;transform:none}}</style><g class=\"pac-in\">"
-          for p in glob.glob("dist/*.svg"):
-              s = open(p, encoding="utf-8").read()
-              if "pac-in" not in s:
-                  s = s.replace(">", ">" + css, 1)
-                  i = s.rfind("</svg>")
-                  if i != -1:
-                      s = s[:i] + "</g>" + s[i:]
-                  open(p, "w", encoding="utf-8").write(s)
-          EOF
+      - name: Apply GitHub Blue CRT theme and entrance animation
+        run: python src/theme_pacman.py dist
 
       - name: Push SVGs to output branch
         run: |
@@ -40,6 +33,6 @@ jobs:
           git config user.name "rafifnurfariz"
           git config user.email "mochrafif9@gmail.com"
           git add .
-          git commit -m "chore: update pacman contribution graph [skip ci]"
+          git commit -m "chore: update blue pacman contribution graph [skip ci]"
           git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git push --force origin output
