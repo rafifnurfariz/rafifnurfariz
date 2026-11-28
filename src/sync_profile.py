@@ -23,8 +23,8 @@ def generate_all(username: str, offline: bool = False) -> None:
     (SVG_DIR / "crt_bios.svg").write_text(render_bios_terminal(telemetry), encoding="utf-8")
     (SVG_DIR / "btop_telemetry.svg").write_text(render_btop_telemetry(telemetry), encoding="utf-8")
 
-    for filename, label, icon in CLI_ENDPOINTS:
-        (SVG_DIR / filename).write_text(render_cli_button(label, icon), encoding="utf-8")
+    for idx, (filename, label, icon) in enumerate(CLI_ENDPOINTS):
+        (SVG_DIR / filename).write_text(render_cli_button(label, icon, delay_s=idx * 0.06), encoding="utf-8")
 
     print(
         f"Synced CRT Amber profile for {telemetry.username}: "

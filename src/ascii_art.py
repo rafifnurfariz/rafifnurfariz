@@ -130,15 +130,17 @@ text{{font-family:{FONT_STACK}}}
 .foot-v{{font-size:10.5px;fill:{AMBER_BRIGHT}}}
 .foot-d{{font-size:9.5px;fill:{AMBER_DIM}}}
 .r{{opacity:0.2;transform:translateY(3px);animation:in .45s cubic-bezier(.16,1,.3,1) forwards}}
+.art-pulse{{animation:art-breathe 4.0s ease-in-out infinite}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 @keyframes in{{to{{opacity:1;transform:none}}}}
+@keyframes art-breathe{{0%,100%{{opacity:1}}50%{{opacity:0.88}}}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
-@media (prefers-reduced-motion:reduce){{.r,.led{{animation:none;opacity:1;transform:none}}}}
+@media (prefers-reduced-motion:reduce){{.r,.art-pulse,.led{{animation:none;opacity:1;transform:none}}}}
 </style>
 {_crt_defs(prefix, w, h)}
 {chrome_base}
 <g clip-path="url(#{prefix}-scr)">
-  <g class="asc-art" xml:space="preserve">
+  <g class="asc-art art-pulse" xml:space="preserve">
     {chr(10).join(groups)}
   </g>
   <line x1="22" y1="322" x2="{w - 22}" y2="322" stroke="{PANEL_DIVIDER}" stroke-width="1"/>

@@ -42,6 +42,10 @@ class CrtSvgTests(unittest.TestCase):
         self.assertIn("whoami", bios)
         self.assertNotIn("RAFIF-BIOS", bios)
         self.assertNotIn("bios-phase", bios)
+        self.assertIn("crt-breathe", bios)
+        self.assertIn("bar-grow", btop)
+        self.assertIn("pulse-bar", btop)
+        self.assertIn("ico-float", btn_ig)
         self.assertIn("TOP LANGUAGES &amp; TOOLS", btop)
         self.assertIn("Photopip", btop)
 

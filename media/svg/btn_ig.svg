@@ -2,10 +2,17 @@
 <style>
 text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace;font-size:12px;font-weight:700;fill:#ffd54f}
 .pre{fill:#ffb000}
+.btn{opacity:0.65;transform:translateY(3px);animation:btn-in 0.35s cubic-bezier(.16,1,.3,1) 0.06s forwards}
+.ico{animation:ico-float 3.4s ease-in-out infinite}
+@keyframes btn-in{to{opacity:1;transform:none}}
+@keyframes ico-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
+@media (prefers-reduced-motion:reduce){.btn,.ico{animation:none;opacity:1;transform:none}}
 </style>
 <defs><linearGradient id="ig-btn" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#feda75"/><stop offset="25%" stop-color="#fa7e1e"/><stop offset="50%" stop-color="#d62976"/><stop offset="75%" stop-color="#962fbf"/><stop offset="100%" stop-color="#4f5bd5"/></linearGradient></defs>
+<g class="btn">
 <rect width="232" height="38" rx="7" fill="#14110c" stroke="#7a5200" stroke-width="1.2"/>
 <rect x="2" y="2" width="228" height="34" rx="5" fill="none" stroke="#291c06" stroke-width="1"/>
-<g transform="translate(14,9)"><g transform="scale(0.833)" fill="none"><rect x="2" y="2" width="20" height="20" rx="5.5" stroke="url(#ig-btn)" stroke-width="2.2"/><circle cx="12" cy="12" r="4.2" stroke="url(#ig-btn)" stroke-width="2.2"/><circle cx="17.3" cy="6.7" r="1.35" fill="url(#ig-btn)"/></g></g>
+<g transform="translate(14,9)"><g class="ico" style="animation-delay:0.41s"><g transform="scale(0.833)" fill="none"><rect x="2" y="2" width="20" height="20" rx="5.5" stroke="url(#ig-btn)" stroke-width="2.2"/><circle cx="12" cy="12" r="4.2" stroke="url(#ig-btn)" stroke-width="2.2"/><circle cx="17.3" cy="6.7" r="1.35" fill="url(#ig-btn)"/></g></g></g>
 <text x="44.0" y="23" text-anchor="start"><tspan class="pre">&gt;_ </tspan>Instagram @rapip1241</text>
+</g>
 </svg>

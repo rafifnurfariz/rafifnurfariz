@@ -151,10 +151,16 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     ]
 
     info_rows_svg = []
+    info_css = []
     for idx, (key, val) in enumerate(info_rows):
         y_pos = 186 + idx * 23
+        delay = 0.06 + idx * 0.045
+        info_css.append(
+            f".nl{idx}{{opacity:0.25;transform:translateX(-6px);"
+            f"animation:row-in 0.28s cubic-bezier(.16,1,.3,1) {delay:.3f}s forwards}}"
+        )
         info_rows_svg.append(
-            f'<g>'
+            f'<g class="nl{idx}">'
             f'<text x="382" y="{y_pos}" class="nk">{esc(key)}</text>'
             f'<text x="468" y="{y_pos}" class="nd">:</text>'
             f'<text x="482" y="{y_pos}" class="nv">{esc(val)}</text>'
@@ -175,6 +181,8 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
         "AMBER CONSOLE",
     )
 
+    reduced_rows = ",".join(f".nl{i}" for i in range(len(info_rows)))
+
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK}}}
@@ -189,27 +197,35 @@ text{{font-family:{FONT_STACK}}}
 .nd{{font-size:12.5px;fill:{AMBER_DIM}}}
 .nv{{font-size:12.5px;fill:{AMBER_SOFT}}}
 .note{{font-size:12px;fill:{AMBER_MID}}}
+.shell-in{{opacity:0.65;transform:translateY(4px);animation:card-in 0.35s cubic-bezier(.16,1,.3,1) forwards}}
+.asc-glow{{animation:crt-breathe 3.4s ease-in-out infinite}}
+.note-in{{opacity:0.25;animation:note-show 0.3s ease 0.38s forwards}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .cur-blink{{animation:cur-flash 1.05s steps(1,end) infinite}}
+{"".join(info_css)}
+@keyframes card-in{{to{{opacity:1;transform:none}}}}
+@keyframes row-in{{to{{opacity:1;transform:none}}}}
+@keyframes note-show{{to{{opacity:1}}}}
+@keyframes crt-breathe{{0%,100%{{opacity:1}}50%{{opacity:0.84}}}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
 @keyframes cur-flash{{0%,49%{{opacity:1}}50%,100%{{opacity:0}}}}
-@media (prefers-reduced-motion:reduce){{.led,.cur-blink{{animation:none;opacity:1}}}}
+@media (prefers-reduced-motion:reduce){{.shell-in,.asc-glow,.note-in,.led,.cur-blink,{reduced_rows}{{animation:none;opacity:1;transform:none}}}}
 </style>
 {_crt_defs(prefix, w, h)}
 {chrome_base}
-<g clip-path="url(#{prefix}-scr)">
+<g clip-path="url(#{prefix}-scr)" class="shell-in">
   <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
   <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
   <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
   <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
   <line x1="32" y1="132" x2="828" y2="132" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
 
-  {_crt_ascii_art(28, 158)}
+  <g class="asc-glow">{_crt_ascii_art(28, 158)}</g>
 
   <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(t.display_name)} <tspan class="bar-r">(@{esc(t.username)})</tspan></text>
   <line x1="382" y1="166" x2="820" y2="166" stroke="{PANEL_BORDER}" stroke-width="1"/>
   {"".join(info_rows_svg)}
-  <text x="382" y="362" class="note">&gt; Exploring code, building web apps, and learning daily.</text>
+  <text x="382" y="362" class="note note-in">&gt; Exploring code, building web apps, and learning daily.</text>
 
   <text x="32" y="394" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
   <rect x="{cmd_x}" y="382" width="8" height="14" rx="1" fill="{AMBER_BRIGHT}" class="cur-blink"/>
@@ -269,9 +285,11 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     for idx, (lang, b_val) in enumerate(top_langs):
         pct = (b_val / total_b) * 100.0 if t.total_bytes else 0.0
         ry = 86 + idx * 28
+        delay = 0.08 + idx * 0.07
         lang_rows.append(
             f'<text x="36" y="{ry}" class="lbl">{esc(clamp_text(lang, 11))}</text>'
-            f'{_segmented_bar(134, ry - 9, pct, segments=18)}'
+            f'<g transform="translate(134,{ry - 9})"><g class="bar-grow" style="animation-delay:{delay:.2f}s">'
+            f'{_segmented_bar(0, 0, pct, segments=18)}</g></g>'
             f'<text x="352" y="{ry}" text-anchor="end" class="val">{pct:5.1f}%</text>'
             f'<text x="430" y="{ry}" text-anchor="end" class="dim">{esc(fmt_bytes(b_val))}</text>'
         )
@@ -279,13 +297,16 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     tag_x = 36
     tag_y = 210
     module_tags = []
-    for mod in t.stacks[:6]:
+    for t_idx, mod in enumerate(t.stacks[:6]):
         tw = len(mod) * 6.8 + 14
         if tag_x + tw > 432:
             break
+        delay = 0.16 + t_idx * 0.04
         module_tags.append(
+            f'<g class="tag-pop" style="animation-delay:{delay:.2f}s">'
             f'<rect x="{tag_x}" y="{tag_y}" width="{tw:.1f}" height="20" rx="3" fill="#1d1609" stroke="{AMBER_DIM}" stroke-width="0.9"/>'
             f'<text x="{tag_x + tw / 2:.1f}" y="{tag_y + 13.5}" text-anchor="middle" class="tag">{esc(mod)}</text>'
+            '</g>'
         )
         tag_x += tw + 6
 
@@ -315,9 +336,13 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     for i, val in enumerate(series[:14]):
         bh = max(4, round((val / peak) * max_bar_h)) if val > 0 else 3
         bx = base_x + i * (bar_w + gap)
-        by = 228 - bh
         fill = AMBER_BRIGHT if val == max(series) and val > 0 else (AMBER_CORE if val > 0 else AMBER_DARK)
-        spark_bars.append(f'<rect x="{bx}" y="{by}" width="{bar_w}" height="{bh}" rx="1.5" fill="{fill}"/>')
+        delay = 0.08 + i * 0.025
+        spark_bars.append(
+            f'<g transform="translate({bx},228)">'
+            f'<rect class="pulse-bar" style="animation-delay:{delay:.3f}s" x="0" y="{-bh}" width="{bar_w}" height="{bh}" rx="1.5" fill="{fill}"/>'
+            '</g>'
+        )
 
     spark_svg = (
         f'<line x1="474" y1="150" x2="822" y2="150" stroke="{PANEL_DIVIDER}" stroke-width="1"/>'
@@ -340,12 +365,15 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     for idx, repo in enumerate(t.repos[:2]):
         ry = 318 + idx * 21
         category = "Profile README & Sync" if repo.is_profile_repo else clamp_text(repo.description or "App Repository", 28)
+        delay = 0.14 + idx * 0.06
         proc_rows.append(
+            f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
             f'<text x="38" y="{ry}" class="val-hi">{esc(clamp_text(repo.name, 22))}</text>'
             f'<text x="235" y="{ry}" class="lbl">{esc(clamp_text(repo.language, 12))}</text>'
             f'<text x="360" y="{ry}" class="val">{esc(fmt_repo_kb(repo.size_kb))}</text>'
             f'<text x="462" y="{ry}" class="dim">{esc(repo.pushed_at)}</text>'
             f'<text x="580" y="{ry}" class="ok">{esc(category)}</text>'
+            '</g>'
         )
 
     git_log_rows = [f'<line x1="38" y1="354" x2="822" y2="354" stroke="{PANEL_DIVIDER}" stroke-width="1"/>']
@@ -355,12 +383,15 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     else:
         for idx, c in enumerate(commits):
             cy = 376 + idx * 21
+            delay = 0.26 + idx * 0.06
             git_log_rows.append(
+                f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
                 f'<text x="38" y="{cy}" class="ok">*</text>'
                 f'<text x="54" y="{cy}" class="val-hi">{esc(c.sha)}</text>'
                 f'<text x="122" y="{cy}" class="dim">{esc(c.date)}</text>'
                 f'<text x="214" y="{cy}" class="lbl">[{esc(clamp_text(c.repo, 12))}]</text>'
                 f'<text x="326" y="{cy}" class="val">{esc(clamp_text(c.message, 62))}</text>'
+                '</g>'
             )
 
     footer = (
@@ -374,7 +405,7 @@ text{{font-family:{FONT_STACK}}}
 .bar-t{{font-size:11.5px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.4px}}
 .bar-r{{font-size:10.5px;fill:{AMBER_MID};letter-spacing:0.4px}}
 .p-title{{font-size:11.5px;font-weight:700;fill:{AMBER_BRIGHT}}}
-.p-hint{{font-size:10.5px;font-weight:700;fill:{AMBER_CORE}}}
+.p-hint{{font-size:10.5px;font-weight:700;fill:{AMBER_CORE};animation:live-pulse 2.4s ease-in-out infinite}}
 .lbl{{font-size:12px;fill:{AMBER_CORE};font-weight:600}}
 .val{{font-size:12px;fill:{AMBER_SOFT}}}
 .val-hi{{font-size:12px;fill:{AMBER_BRIGHT};font-weight:700}}
@@ -384,10 +415,18 @@ text{{font-family:{FONT_STACK}}}
 .tbl-h{{font-size:10.5px;fill:{AMBER_DIM};font-weight:700;letter-spacing:0.5px}}
 .fkey{{font-size:10.5px;fill:{AMBER_CORE}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
-.in{{animation:panel-in 0.55s ease-out both}}
+.in{{opacity:0.7;transform:translateY(4px);animation:panel-in 0.35s cubic-bezier(.16,1,.3,1) forwards}}
+.bar-grow{{transform-origin:0 0;transform:scaleX(0.18);animation:bar-fill 0.45s cubic-bezier(.16,1,.3,1) both}}
+.pulse-bar{{transform-origin:0 0;transform:scaleY(0.2);animation:bar-rise 0.35s cubic-bezier(.16,1,.3,1) both}}
+.tag-pop{{opacity:0.3;animation:fade-up 0.25s ease both}}
+.row-glide{{opacity:0.3;transform:translateY(3px);animation:fade-up 0.28s cubic-bezier(.16,1,.3,1) both}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
-@keyframes panel-in{{from{{opacity:0.65}}to{{opacity:1}}}}
-@media (prefers-reduced-motion:reduce){{.led,.in{{animation:none;opacity:1}}}}
+@keyframes live-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.58}}}}
+@keyframes panel-in{{to{{opacity:1;transform:none}}}}
+@keyframes bar-fill{{to{{transform:scaleX(1)}}}}
+@keyframes bar-rise{{to{{transform:scaleY(1)}}}}
+@keyframes fade-up{{to{{opacity:1;transform:none}}}}
+@media (prefers-reduced-motion:reduce){{.led,.p-hint,.in,.bar-grow,.pulse-bar,.tag-pop,.row-glide{{animation:none;opacity:1;transform:none}}}}
 </style>
 {_crt_defs(prefix, w, h)}
 {chrome_base}
@@ -432,8 +471,8 @@ BRAND_LOGOS: dict[str, tuple[str, str]] = {
 }
 
 
-def render_cli_button(label: str, icon: str = "") -> str:
-    """Render a compact Retro CRT Amber command-keycap SVG badge with optional brand logo."""
+def render_cli_button(label: str, icon: str = "", delay_s: float = 0.0) -> str:
+    """Render a compact Retro CRT Amber command-keycap SVG badge with subtle motion."""
     logo_defs, logo_shape = BRAND_LOGOS.get(icon, ("", ""))
     text_w = round((len(label) + 3) * 7.5)
     icon_pad = 28 if logo_shape else 0
@@ -441,15 +480,27 @@ def render_cli_button(label: str, icon: str = "") -> str:
     h = 38
     text_x = 16 + icon_pad if logo_shape else w / 2
     anchor = "start" if logo_shape else "middle"
-    logo_svg = f'<g transform="translate(14,9)">{logo_shape}</g>' if logo_shape else ""
+    float_delay = delay_s + 0.35
+    logo_svg = (
+        f'<g transform="translate(14,9)"><g class="ico" style="animation-delay:{float_delay:.2f}s">{logo_shape}</g></g>'
+        if logo_shape
+        else ""
+    )
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{AMBER_BRIGHT}}}
 .pre{{fill:{AMBER_CORE}}}
+.btn{{opacity:0.65;transform:translateY(3px);animation:btn-in 0.35s cubic-bezier(.16,1,.3,1) {delay_s:.2f}s forwards}}
+.ico{{animation:ico-float 3.4s ease-in-out infinite}}
+@keyframes btn-in{{to{{opacity:1;transform:none}}}}
+@keyframes ico-float{{0%,100%{{transform:translateY(0)}}50%{{transform:translateY(-1.2px)}}}}
+@media (prefers-reduced-motion:reduce){{.btn,.ico{{animation:none;opacity:1;transform:none}}}}
 </style>
 {logo_defs}
+<g class="btn">
 <rect width="{w}" height="{h}" rx="7" fill="#14110c" stroke="{AMBER_DIM}" stroke-width="1.2"/>
 <rect x="2" y="2" width="{w - 4}" height="{h - 4}" rx="5" fill="none" stroke="#291c06" stroke-width="1"/>
 {logo_svg}
 <text x="{text_x:.1f}" y="23" text-anchor="{anchor}"><tspan class="pre">&gt;_ </tspan>{esc(label)}</text>
+</g>
 </svg>'''
