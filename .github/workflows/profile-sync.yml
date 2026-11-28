@@ -3,11 +3,6 @@ name: Sync CRT Amber Profile Telemetry
 on:
   schedule:
     - cron: "15 0 * * *"
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**"
   workflow_dispatch:
 
 permissions:
