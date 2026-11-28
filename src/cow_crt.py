@@ -1,4 +1,4 @@
-"""Converts mood-cow.webp into a Retro CRT Amber themed animated GIF (424x432)."""
+"""Converts mood-cow.webp into a compact Retro CRT Amber animated GIF (350x356)."""
 from __future__ import annotations
 
 import os
@@ -18,7 +18,6 @@ PANEL_DIVIDER = (41, 28, 6)
 
 AMBER_BRIGHT = (255, 213, 79)
 AMBER_CORE = (255, 176, 0)
-AMBER_SOFT = (255, 232, 163)
 AMBER_MID = (204, 136, 0)
 AMBER_DIM = (122, 82, 0)
 
@@ -82,16 +81,16 @@ def _build_base_chassis(w: int, h: int, font_b: ImageFont.ImageFont, font_r: Ima
     draw.rounded_rectangle([0, 0, w - 1, h - 1], radius=14, fill=CHASSIS_BG, outline=CHASSIS_STROKE, width=2)
     draw.rounded_rectangle([12, 12, w - 13, h - 13], radius=9, fill=SCREEN_BG, outline=SCREEN_STROKE, width=1)
 
-    draw.rounded_rectangle([12, 12, w - 13, 42], radius=9, fill=SCREEN_BAR)
-    draw.rectangle([12, 30, w - 13, 42], fill=SCREEN_BAR)
-    draw.line([12, 42, w - 13, 42], fill=SCREEN_STROKE, width=1)
+    draw.rounded_rectangle([12, 12, w - 13, 40], radius=9, fill=SCREEN_BAR)
+    draw.rectangle([12, 28, w - 13, 40], fill=SCREEN_BAR)
+    draw.line([12, 40, w - 13, 40], fill=SCREEN_STROKE, width=1)
 
-    draw.text((40, 21), "MOOD // Polish Cow", font=font_b, fill=AMBER_CORE)
-    draw.text((w - 28, 22), "VIBING", font=font_r, fill=AMBER_MID, anchor="ra")
+    draw.text((38, 20), "MOOD // Polish Cow", font=font_b, fill=AMBER_CORE)
+    draw.text((w - 24, 21), "VIBING", font=font_r, fill=AMBER_MID, anchor="ra")
 
-    draw.line([26, 392, w - 26, 392], fill=PANEL_DIVIDER, width=1)
-    draw.text((28, 398), "> status:", font=font_b, fill=AMBER_CORE)
-    draw.text((92, 398), "coding & vibing", font=font_r, fill=AMBER_BRIGHT)
+    draw.line([22, 322, w - 22, 322], fill=PANEL_DIVIDER, width=1)
+    draw.text((24, 328), "> status:", font=font_b, fill=AMBER_CORE)
+    draw.text((84, 328), "coding & vibing", font=font_r, fill=AMBER_BRIGHT)
     return base
 
 
@@ -104,24 +103,24 @@ def render_cow_crt(
     src_path: str | Path = "media/images/mood-cow.webp",
     out_path: str | Path = "media/images/polish-cow-crt.gif",
 ) -> Path:
-    """Render Polish Cow frames inside a 424x432 Retro CRT Amber monitor GIF."""
-    w, h = 424, 432
-    font_b = _load_font(12, bold=True)
-    font_r = _load_font(11, bold=False)
+    """Render Polish Cow frames inside a compact 350x356 Retro CRT Amber monitor GIF."""
+    w, h = 350, 356
+    font_b = _load_font(11, bold=True)
+    font_r = _load_font(10, bold=False)
 
     base = _build_base_chassis(w, h, font_b, font_r)
     src = Image.open(src_path)
 
     scan = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     s_arr = np.asarray(scan, dtype=np.uint8).copy()
-    s_arr[43 : h - 13 : 3, 13 : w - 13] = (0, 0, 0, 56)
+    s_arr[41 : h - 13 : 3, 13 : w - 13] = (0, 0, 0, 56)
     scan_overlay = Image.fromarray(s_arr, mode="RGBA")
 
     eq_heights = [
-        [4, 9, 12, 7],
-        [7, 13, 8, 10],
-        [11, 6, 14, 9],
-        [8, 11, 6, 13],
+        [4, 8, 11, 6],
+        [6, 12, 7, 9],
+        [10, 5, 12, 8],
+        [7, 10, 5, 11],
     ]
 
     raw_frames = [f.copy() for f in ImageSequence.Iterator(src)]
@@ -130,16 +129,15 @@ def render_cow_crt(
 
     for idx, raw_frame in enumerate(raw_frames):
         cow = _extract_cow_rgba(raw_frame)
-        scale = min(318 / cow.width, 266 / cow.height)
+        scale = min(262 / cow.width, 224 / cow.height)
         nw, nh = round(cow.width * scale), round(cow.height * scale)
         cow_resized = cow.resize((nw, nh), Image.Resampling.LANCZOS)
 
         cx = (w - nw) // 2
-        cy = 56 + (318 - nh) // 2
+        cy = 48 + (264 - nh) // 2
 
         canvas = base.copy()
 
-        # Subtle warm amber phosphor rim glow around cow silhouette
         halo = Image.new("RGBA", (w, h), (0, 0, 0, 0))
         cow_alpha = cow_resized.getchannel("A")
         amber_fill = Image.new("RGBA", (nw, nh), (*AMBER_CORE, 255))
@@ -160,14 +158,14 @@ def render_cow_crt(
             0,
             255,
         )
-        fdraw.ellipse([24, 23, 32, 31], fill=led_col)
+        fdraw.ellipse([22, 22, 30, 30], fill=led_col)
 
         bars = eq_heights[idx % len(eq_heights)]
         for b_i, bh in enumerate(bars):
-            bx = w - 98 + b_i * 6
-            by = 411 - bh
-            fdraw.rectangle([bx, by, bx + 4, 411], fill=(*AMBER_CORE, 235))
-        fdraw.text((w - 28, 399), "[GIF]", font=font_r, fill=AMBER_DIM, anchor="ra")
+            bx = w - 84 + b_i * 5
+            by = 339 - bh
+            fdraw.rectangle([bx, by, bx + 3, 339], fill=(*AMBER_CORE, 235))
+        fdraw.text((w - 24, 329), "[GIF]", font=font_r, fill=AMBER_DIM, anchor="ra")
 
         canvas = Image.alpha_composite(canvas, scan_overlay)
         rgb_frames.append(canvas.convert("RGB"))

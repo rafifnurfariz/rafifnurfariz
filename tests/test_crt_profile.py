@@ -22,12 +22,18 @@ class CrtSvgTests(unittest.TestCase):
         t = build_sample_telemetry("rafifnurfariz")
         bios = render_bios_terminal(t)
         btop = render_btop_telemetry(t)
-        btn = render_cli_button("Instagram @rapip1241")
+        btn_gh = render_cli_button("GitHub Repos", "github")
+        btn_ig = render_cli_button("Instagram @rapip1241", "instagram")
+        btn_tt = render_cli_button("TikTok @rapip1241", "tiktok")
 
-        for svg in (bios, btop, btn):
+        for svg in (bios, btop, btn_gh, btn_ig, btn_tt):
             root = ET.fromstring(svg)
             self.assertTrue(root.tag.endswith("svg"))
             self.assertNotIn("photopip.vercel.app", svg)
+
+        self.assertIn("#f0f6fc", btn_gh)
+        self.assertIn("ig-btn", btn_ig)
+        self.assertIn("#FE2C55", btn_tt)
 
         for required in ("#121212", "#ffb000", "prefers-reduced-motion:reduce"):
             self.assertIn(required, bios)
@@ -80,13 +86,13 @@ class CrtSvgTests(unittest.TestCase):
 
             svg = render_currents_crt(ROOT / "media/images/currents-cover.jpg", cur_out)
             root = ET.fromstring(svg)
-            self.assertEqual((root.attrib["width"], root.attrib["height"]), ("424", "432"))
-            self.assertIn("Tame Impala - Currents", svg)
+            self.assertEqual((root.attrib["width"], root.attrib["height"]), ("350", "356"))
+            self.assertIn("Currents", svg)
             self.assertIn("#ffb000", svg)
 
             gif_path = render_cow_crt(ROOT / "media/images/mood-cow.webp", cow_out)
             with Image.open(gif_path) as im:
-                self.assertEqual(im.size, (424, 432))
+                self.assertEqual(im.size, (350, 356))
                 self.assertEqual(im.n_frames, 20)
 
 

@@ -1,4 +1,4 @@
-"""Generates a Retro CRT Amber ASCII SVG from an album cover or image."""
+"""Generates a compact Retro CRT Amber ASCII SVG from an album cover or image."""
 from __future__ import annotations
 
 import html
@@ -63,13 +63,13 @@ def render_currents_crt(
     src_path: str | Path = "media/images/currents-cover.jpg",
     out_path: str | Path = "media/svg/currents_crt.svg",
 ) -> str:
-    """Convert image into a Retro CRT Amber ASCII terminal SVG (424x432)."""
-    w, h = 424, 432
+    """Convert image into a compact Retro CRT Amber ASCII terminal SVG (350x356)."""
+    w, h = 350, 356
     prefix = "cur"
-    cols, cw, lh, fs = 90, 3.8, 5.6, 5.9
+    cols, cw, lh, fs = 76, 3.55, 5.1, 5.4
 
     im = Image.open(src_path).convert("L")
-    rows = min(60, round(cols * im.height / im.width * (cw / lh)))
+    rows = min(53, round(cols * im.height / im.width * (cw / lh)))
 
     im_sharp = im.filter(ImageFilter.UnsharpMask(radius=4, percent=180, threshold=2))
     im_eq = ImageOps.autocontrast(im_sharp, cutoff=2)
@@ -101,7 +101,7 @@ def render_currents_crt(
     art_w = cols * cw
     art_h = rows * lh
     x_off = (w - art_w) / 2
-    y_off = 52 + max(0.0, (336 - art_h) / 2)
+    y_off = 47 + max(0.0, (272 - art_h) / 2)
 
     groups = []
     for g_idx in range(0, rows, 2):
@@ -116,19 +116,19 @@ def render_currents_crt(
         prefix,
         w,
         h,
-        "MUSIC // Tame Impala - Currents",
+        "MUSIC // Tame Impala",
         "ASCII ART",
     )
 
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK}}}
-.bar-t{{font-size:11.5px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.4px}}
-.bar-r{{font-size:10.5px;fill:{AMBER_MID};letter-spacing:0.4px}}
+.bar-t{{font-size:11px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.3px}}
+.bar-r{{font-size:10px;fill:{AMBER_MID};letter-spacing:0.3px}}
 .asc-art text{{font-size:{fs}px;white-space:pre}}
-.foot-k{{font-size:11.5px;font-weight:700;fill:{AMBER_CORE}}}
-.foot-v{{font-size:11.5px;fill:{AMBER_BRIGHT}}}
-.foot-d{{font-size:10.5px;fill:{AMBER_DIM}}}
+.foot-k{{font-size:10.5px;font-weight:700;fill:{AMBER_CORE}}}
+.foot-v{{font-size:10.5px;fill:{AMBER_BRIGHT}}}
+.foot-d{{font-size:9.5px;fill:{AMBER_DIM}}}
 .r{{opacity:0.2;transform:translateY(3px);animation:in .45s cubic-bezier(.16,1,.3,1) forwards}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 @keyframes in{{to{{opacity:1;transform:none}}}}
@@ -141,9 +141,9 @@ text{{font-family:{FONT_STACK}}}
   <g class="asc-art" xml:space="preserve">
     {chr(10).join(groups)}
   </g>
-  <line x1="26" y1="392" x2="{w - 26}" y2="392" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
-  <text x="28" y="408" class="foot-k">&gt; album: <tspan class="foot-v">Tame Impala - Currents</tspan></text>
-  <text x="{w - 28}" y="408" text-anchor="end" class="foot-d">[ASCII]</text>
+  <line x1="22" y1="322" x2="{w - 22}" y2="322" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
+  <text x="24" y="337" class="foot-k">&gt; album: <tspan class="foot-v">Currents</tspan></text>
+  <text x="{w - 24}" y="337" text-anchor="end" class="foot-d">[ASCII]</text>
 </g>
 {chrome_overlay}
 </svg>'''

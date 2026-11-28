@@ -10,9 +10,9 @@ from github_stats import build_sample_telemetry, collect_telemetry
 SVG_DIR = Path("media/svg")
 
 CLI_ENDPOINTS = [
-    ("btn_repos.svg", "GitHub Repos"),
-    ("btn_ig.svg", "Instagram @rapip1241"),
-    ("btn_tt.svg", "TikTok @rapip1241"),
+    ("btn_repos.svg", "GitHub Repos", "github"),
+    ("btn_ig.svg", "Instagram @rapip1241", "instagram"),
+    ("btn_tt.svg", "TikTok @rapip1241", "tiktok"),
 ]
 
 
@@ -23,8 +23,8 @@ def generate_all(username: str, offline: bool = False) -> None:
     (SVG_DIR / "crt_bios.svg").write_text(render_bios_terminal(telemetry), encoding="utf-8")
     (SVG_DIR / "btop_telemetry.svg").write_text(render_btop_telemetry(telemetry), encoding="utf-8")
 
-    for filename, label in CLI_ENDPOINTS:
-        (SVG_DIR / filename).write_text(render_cli_button(label), encoding="utf-8")
+    for filename, label, icon in CLI_ENDPOINTS:
+        (SVG_DIR / filename).write_text(render_cli_button(label, icon), encoding="utf-8")
 
     print(
         f"Synced CRT Amber profile for {telemetry.username}: "

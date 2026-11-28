@@ -1,9 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="36" viewBox="0 0 180 36">
+<svg xmlns="http://www.w3.org/2000/svg" width="210" height="38" viewBox="0 0 210 38">
 <style>
 text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace;font-size:12px;font-weight:700;fill:#ffd54f}
 .pre{fill:#ffb000}
 </style>
-<rect width="180" height="36" rx="6" fill="#14110c" stroke="#7a5200" stroke-width="1.2"/>
-<rect x="2" y="2" width="176" height="32" rx="4.5" fill="none" stroke="#291c06" stroke-width="1"/>
-<text x="90.0" y="22" text-anchor="middle"><tspan class="pre">&gt;_ </tspan>TikTok @rapip1241</text>
+
+<rect width="210" height="38" rx="7" fill="#14110c" stroke="#7a5200" stroke-width="1.2"/>
+<rect x="2" y="2" width="206" height="34" rx="5" fill="none" stroke="#291c06" stroke-width="1"/>
+<g transform="translate(14,9)"><g transform="scale(0.833)"><path d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" fill="#25F4EE" transform="translate(-0.8,-0.6)"/><path d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" fill="#FE2C55" transform="translate(0.8,0.6)"/><path d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" fill="#FFFFFF"/></g></g>
+<text x="44.0" y="23" text-anchor="start"><tspan class="pre">&gt;_ </tspan>TikTok @rapip1241</text>
 </svg>

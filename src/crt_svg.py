@@ -532,17 +532,48 @@ text{{font-family:{FONT_STACK}}}
 </svg>'''
 
 
-def render_cli_button(label: str) -> str:
-    """Render a compact Retro CRT Amber command-keycap SVG badge."""
-    text = f">_ {label}"
-    w = max(172, round(len(text) * 7.6) + 28)
-    h = 36
+BRAND_LOGOS: dict[str, tuple[str, str]] = {
+    "github": (
+        "",
+        '<path transform="scale(0.833)" fill="#f0f6fc" fill-rule="evenodd" d="M12 1.27a11 11 0 00-3.48 21.46c.55.09.73-.28.73-.55v-1.84c-3.03.64-3.67-1.45-3.67-1.45-.55-1.29-1.28-1.65-1.28-1.65-.92-.65.1-.65.1-.65 1.1 0 1.73 1.1 1.73 1.1.92 1.65 2.57 1.2 3.21.92a2 2 0 01.64-1.47c-2.47-.27-5.04-1.19-5.04-5.5 0-1.1.46-2.1 1.2-2.84a3.76 3.76 0 010-2.93s.91-.28 3.11 1.1c1.8-.49 3.7-.49 5.5 0 2.1-1.38 3.02-1.1 3.02-1.1a3.76 3.76 0 010 2.93c.83.74 1.2 1.74 1.2 2.94 0 4.21-2.57 5.13-5.04 5.4.45.37.82.92.82 2.02v3.03c0 .27.1.64.73.55A11 11 0 0012 1.27z"/>',
+    ),
+    "instagram": (
+        '<defs><linearGradient id="ig-btn" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse">'
+        '<stop offset="0%" stop-color="#feda75"/><stop offset="25%" stop-color="#fa7e1e"/>'
+        '<stop offset="50%" stop-color="#d62976"/><stop offset="75%" stop-color="#962fbf"/>'
+        '<stop offset="100%" stop-color="#4f5bd5"/></linearGradient></defs>',
+        '<g transform="scale(0.833)" fill="none"><rect x="2" y="2" width="20" height="20" rx="5.5" stroke="url(#ig-btn)" stroke-width="2.2"/>'
+        '<circle cx="12" cy="12" r="4.2" stroke="url(#ig-btn)" stroke-width="2.2"/>'
+        '<circle cx="17.3" cy="6.7" r="1.35" fill="url(#ig-btn)"/></g>',
+    ),
+    "tiktok": (
+        "",
+        '<g transform="scale(0.833)">'
+        '<path d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" fill="#25F4EE" transform="translate(-0.8,-0.6)"/>'
+        '<path d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" fill="#FE2C55" transform="translate(0.8,0.6)"/>'
+        '<path d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" fill="#FFFFFF"/></g>',
+    ),
+}
+
+
+def render_cli_button(label: str, icon: str = "") -> str:
+    """Render a compact Retro CRT Amber command-keycap SVG badge with optional brand logo."""
+    logo_defs, logo_shape = BRAND_LOGOS.get(icon, ("", ""))
+    text_w = round((len(label) + 3) * 7.5)
+    icon_pad = 28 if logo_shape else 0
+    w = max(180, text_w + icon_pad + 32)
+    h = 38
+    text_x = 16 + icon_pad if logo_shape else w / 2
+    anchor = "start" if logo_shape else "middle"
+    logo_svg = f'<g transform="translate(14,9)">{logo_shape}</g>' if logo_shape else ""
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{AMBER_BRIGHT}}}
 .pre{{fill:{AMBER_CORE}}}
 </style>
-<rect width="{w}" height="{h}" rx="6" fill="#14110c" stroke="{AMBER_DIM}" stroke-width="1.2"/>
-<rect x="2" y="2" width="{w - 4}" height="{h - 4}" rx="4.5" fill="none" stroke="#291c06" stroke-width="1"/>
-<text x="{w / 2:.1f}" y="22" text-anchor="middle"><tspan class="pre">&gt;_ </tspan>{esc(label)}</text>
+{logo_defs}
+<rect width="{w}" height="{h}" rx="7" fill="#14110c" stroke="{AMBER_DIM}" stroke-width="1.2"/>
+<rect x="2" y="2" width="{w - 4}" height="{h - 4}" rx="5" fill="none" stroke="#291c06" stroke-width="1"/>
+{logo_svg}
+<text x="{text_x:.1f}" y="23" text-anchor="{anchor}"><tspan class="pre">&gt;_ </tspan>{esc(label)}</text>
 </svg>'''
