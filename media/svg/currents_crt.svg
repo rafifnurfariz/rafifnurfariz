@@ -7,7 +7,7 @@ text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-R
 .foot-k{font-size:10.5px;font-weight:700;fill:#ffb000}
 .foot-v{font-size:10.5px;fill:#ffd54f}
 .foot-d{font-size:9.5px;fill:#7a5200}
-.r{opacity:0.2;transform:translateY(3px);animation:in .45s cubic-bezier(.16,1,.3,1) forwards}
+.r{opacity:0;transform:translateY(5px);animation:in .50s cubic-bezier(.16,1,.3,1) forwards}
 .art-pulse{animation:art-breathe 4.0s ease-in-out infinite}
 .led{animation:led-pulse 2.2s ease-in-out infinite}
 @keyframes in{to{opacity:1;transform:none}}

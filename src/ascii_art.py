@@ -129,7 +129,7 @@ text{{font-family:{FONT_STACK}}}
 .foot-k{{font-size:10.5px;font-weight:700;fill:{AMBER_CORE}}}
 .foot-v{{font-size:10.5px;fill:{AMBER_BRIGHT}}}
 .foot-d{{font-size:9.5px;fill:{AMBER_DIM}}}
-.r{{opacity:0.2;transform:translateY(3px);animation:in .45s cubic-bezier(.16,1,.3,1) forwards}}
+.r{{opacity:0;transform:translateY(5px);animation:in .50s cubic-bezier(.16,1,.3,1) forwards}}
 .art-pulse{{animation:art-breathe 4.0s ease-in-out infinite}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 @keyframes in{{to{{opacity:1;transform:none}}}}

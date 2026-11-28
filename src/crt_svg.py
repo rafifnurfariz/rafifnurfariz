@@ -154,10 +154,10 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     info_css = []
     for idx, (key, val) in enumerate(info_rows):
         y_pos = 186 + idx * 23
-        delay = 0.06 + idx * 0.045
+        delay = 0.25 + idx * 0.09
         info_css.append(
-            f".nl{idx}{{opacity:0.25;transform:translateX(-6px);"
-            f"animation:row-in 0.28s cubic-bezier(.16,1,.3,1) {delay:.3f}s forwards}}"
+            f".nl{idx}{{opacity:0;transform:translateX(-10px);"
+            f"animation:row-in 0.50s cubic-bezier(.16,1,.3,1) {delay:.2f}s forwards}}"
         )
         info_rows_svg.append(
             f'<g class="nl{idx}">'
@@ -197,33 +197,37 @@ text{{font-family:{FONT_STACK}}}
 .nd{{font-size:12.5px;fill:{AMBER_DIM}}}
 .nv{{font-size:12.5px;fill:{AMBER_SOFT}}}
 .note{{font-size:12px;fill:{AMBER_MID}}}
-.shell-in{{opacity:0.65;transform:translateY(4px);animation:card-in 0.35s cubic-bezier(.16,1,.3,1) forwards}}
-.asc-glow{{animation:crt-breathe 3.4s ease-in-out infinite}}
-.note-in{{opacity:0.25;animation:note-show 0.3s ease 0.38s forwards}}
+.hdr-in{{opacity:0;transform:translateY(6px);animation:card-in 0.50s cubic-bezier(.16,1,.3,1) 0.05s forwards}}
+.asc-in{{opacity:0;transform:translateY(8px);animation:card-in 0.60s cubic-bezier(.16,1,.3,1) 0.15s forwards}}
+.asc-glow{{animation:crt-breathe 3.4s ease-in-out 0.8s infinite}}
+.note-in{{opacity:0;transform:translateX(-8px);animation:row-in 0.50s cubic-bezier(.16,1,.3,1) 0.92s forwards}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .cur-blink{{animation:cur-flash 1.05s steps(1,end) infinite}}
 {"".join(info_css)}
 @keyframes card-in{{to{{opacity:1;transform:none}}}}
 @keyframes row-in{{to{{opacity:1;transform:none}}}}
-@keyframes note-show{{to{{opacity:1}}}}
 @keyframes crt-breathe{{0%,100%{{opacity:1}}50%{{opacity:0.84}}}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
 @keyframes cur-flash{{0%,49%{{opacity:1}}50%,100%{{opacity:0}}}}
-@media (prefers-reduced-motion:reduce){{.shell-in,.asc-glow,.note-in,.led,.cur-blink,{reduced_rows}{{animation:none;opacity:1;transform:none}}}}
+@media (prefers-reduced-motion:reduce){{.hdr-in,.asc-in,.asc-glow,.note-in,.led,.cur-blink,{reduced_rows}{{animation:none;opacity:1;transform:none}}}}
 </style>
 {_crt_defs(prefix, w, h)}
 {chrome_base}
-<g clip-path="url(#{prefix}-scr)" class="shell-in">
-  <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
-  <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
-  <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
-  <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
-  <line x1="32" y1="132" x2="828" y2="132" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
+<g clip-path="url(#{prefix}-scr)">
+  <g class="hdr-in">
+    <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
+    <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
+    <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
+    <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
+    <line x1="32" y1="132" x2="828" y2="132" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
+  </g>
 
-  <g class="asc-glow">{_crt_ascii_art(28, 158)}</g>
+  <g class="asc-in"><g class="asc-glow">{_crt_ascii_art(28, 158)}</g></g>
 
-  <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(t.display_name)} <tspan class="bar-r">(@{esc(t.username)})</tspan></text>
-  <line x1="382" y1="166" x2="820" y2="166" stroke="{PANEL_BORDER}" stroke-width="1"/>
+  <g class="hdr-in">
+    <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(t.display_name)} <tspan class="bar-r">(@{esc(t.username)})</tspan></text>
+    <line x1="382" y1="166" x2="820" y2="166" stroke="{PANEL_BORDER}" stroke-width="1"/>
+  </g>
   {"".join(info_rows_svg)}
   <text x="382" y="362" class="note note-in">&gt; Exploring code, building web apps, and learning daily.</text>
 
@@ -415,11 +419,11 @@ text{{font-family:{FONT_STACK}}}
 .tbl-h{{font-size:10.5px;fill:{AMBER_DIM};font-weight:700;letter-spacing:0.5px}}
 .fkey{{font-size:10.5px;fill:{AMBER_CORE}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
-.in{{opacity:0.7;transform:translateY(4px);animation:panel-in 0.35s cubic-bezier(.16,1,.3,1) forwards}}
-.bar-grow{{transform-origin:0 0;transform:scaleX(0.18);animation:bar-fill 0.45s cubic-bezier(.16,1,.3,1) both}}
-.pulse-bar{{transform-origin:0 0;transform:scaleY(0.2);animation:bar-rise 0.35s cubic-bezier(.16,1,.3,1) both}}
-.tag-pop{{opacity:0.3;animation:fade-up 0.25s ease both}}
-.row-glide{{opacity:0.3;transform:translateY(3px);animation:fade-up 0.28s cubic-bezier(.16,1,.3,1) both}}
+.in{{opacity:0;transform:translateY(8px);animation:panel-in 0.55s cubic-bezier(.16,1,.3,1) 0.12s forwards}}
+.bar-grow{{transform-origin:0 0;transform:scaleX(0);animation:bar-fill 0.65s cubic-bezier(.16,1,.3,1) both}}
+.pulse-bar{{transform-origin:0 0;transform:scaleY(0);animation:bar-rise 0.50s cubic-bezier(.16,1,.3,1) both}}
+.tag-pop{{opacity:0;transform:translateY(4px);animation:fade-up 0.40s ease both}}
+.row-glide{{opacity:0;transform:translateX(-8px);animation:fade-up 0.45s cubic-bezier(.16,1,.3,1) both}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
 @keyframes live-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.58}}}}
 @keyframes panel-in{{to{{opacity:1;transform:none}}}}
@@ -490,7 +494,7 @@ def render_cli_button(label: str, icon: str = "", delay_s: float = 0.0) -> str:
 <style>
 text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{AMBER_BRIGHT}}}
 .pre{{fill:{AMBER_CORE}}}
-.btn{{opacity:0.65;transform:translateY(3px);animation:btn-in 0.35s cubic-bezier(.16,1,.3,1) {delay_s:.2f}s forwards}}
+.btn{{opacity:0;transform:translateY(8px);animation:btn-in 0.55s cubic-bezier(.16,1,.3,1) {delay_s + 0.20:.2f}s forwards}}
 .ico{{animation:ico-float 3.4s ease-in-out infinite}}
 @keyframes btn-in{{to{{opacity:1;transform:none}}}}
 @keyframes ico-float{{0%,100%{{transform:translateY(0)}}50%{{transform:translateY(-1.2px)}}}}
