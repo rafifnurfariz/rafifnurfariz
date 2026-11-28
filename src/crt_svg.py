@@ -102,39 +102,6 @@ def _crt_chrome(prefix: str, width: int, height: int, left_title: str, right_sta
     return base, overlay
 
 
-def _bios_chip_badge(x: int, y: int) -> str:
-    """Pixel-art retro amber BIOS emblem."""
-    rows = [
-        "001111111100",
-        "010000000010",
-        "101101101101",
-        "101001100101",
-        "101111111101",
-        "100011110001",
-        "010000000010",
-        "001111111100",
-    ]
-    rects = []
-    px = 5
-    for r_idx, row in enumerate(rows):
-        for c_idx, ch in enumerate(row):
-            if ch == "1":
-                color = AMBER_BRIGHT if r_idx in (2, 4) else AMBER_CORE
-                rects.append(
-                    f'<rect x="{x + c_idx * px}" y="{y + r_idx * px}" '
-                    f'width="{px - 0.6}" height="{px - 0.6}" rx="0.6" fill="{color}"/>'
-                )
-    return (
-        f'<g opacity="0.92">'
-        f'<rect x="{x - 6}" y="{y - 6}" width="{12 * px + 12}" height="{8 * px + 24}" '
-        f'rx="4" fill="#171208" stroke="{AMBER_DIM}" stroke-width="1"/>'
-        f'{"".join(rects)}'
-        f'<text x="{x + 6 * px}" y="{y + 8 * px + 13}" text-anchor="middle" '
-        f'font-size="8.5" font-weight="700" fill="{AMBER_CORE}">BOOT-OK</text>'
-        "</g>"
-    )
-
-
 def _crt_ascii_art(x: int, y: int) -> str:
     """Retro CRT Monitor + coding mascot ASCII art in phosphor amber."""
     lines: list[tuple[str, str]] = [
@@ -164,7 +131,7 @@ def _crt_ascii_art(x: int, y: int) -> str:
 
 
 def render_bios_terminal(t: ProfileTelemetry) -> str:
-    """Render one-shot BIOS loading sequence transitioning permanently into CMD profile info."""
+    """Render Retro CRT Amber CMD profile terminal SVG directly with no loading gimmick."""
     w, h = 860, 420
     prefix = "bios"
     top_project = next((r for r in t.repos if not r.is_profile_repo), t.repos[0] if t.repos else None)
@@ -172,35 +139,6 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
 
     lang_list = " · ".join(name for name, _ in t.languages[:4]) or "Learning Code"
     stack_list = " · ".join(t.stacks[:4]) or lang_list
-
-    # Ultra-fast ~0.45s BIOS flash that clears once and never repeats
-    bios_lines = [
-        ("SYSTEM CHECK   : Developer Terminal Ready", "[OK]", 0.00),
-        ("MEMORY CHECK   : 65536K OK", "[PASS]", 0.05),
-        (f"USER PROFILE   : {t.display_name} (@{t.username})", "[FOUND]", 0.12),
-        ("LAUNCHING CMD  : whoami ...", "", 0.20),
-    ]
-
-    bios_rows_svg = []
-    bios_delays_css = []
-    for idx, (label, tag, delay_s) in enumerate(bios_lines):
-        cls = f"bl{idx}"
-        if delay_s > 0:
-            bios_delays_css.append(
-                f".{cls}{{opacity:0;animation:fade-in 0.08s ease {delay_s:.2f}s forwards}}"
-            )
-        y_pos = 144 + idx * 30
-        tag_svg = (
-            f'<text x="816" y="{y_pos}" text-anchor="end" class="ok">{esc(tag)}</text>'
-            if tag
-            else ""
-        )
-        bios_rows_svg.append(
-            f'<g class="{cls}">'
-            f'<text x="32" y="{y_pos}" class="b-txt">{esc(label)}</text>'
-            f"{tag_svg}"
-            "</g>"
-        )
 
     info_rows = [
         ("NAME", f"{t.display_name} (@{t.username})"),
@@ -212,17 +150,11 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
         ("SINCE", f"{t.created_at} ({fmt_uptime(t.uptime_days)} on GitHub)"),
     ]
 
-    info_delays_css = []
     info_rows_svg = []
     for idx, (key, val) in enumerate(info_rows):
-        cls = f"nl{idx}"
-        delay_s = 0.68 + idx * 0.03
-        info_delays_css.append(
-            f".{cls}{{opacity:0;transform:translateY(3px);animation:row-in 0.14s ease {delay_s:.2f}s forwards}}"
-        )
         y_pos = 186 + idx * 23
         info_rows_svg.append(
-            f'<g class="{cls}">'
+            f'<g>'
             f'<text x="382" y="{y_pos}" class="nk">{esc(key)}</text>'
             f'<text x="468" y="{y_pos}" class="nd">:</text>'
             f'<text x="482" y="{y_pos}" class="nv">{esc(val)}</text>'
@@ -235,14 +167,6 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     cmd_text = "whoami"
     cmd_w = round(len(cmd_text) * 7.8) + 2
 
-    extra_defs = (
-        f'<clipPath id="{prefix}-cmd-clip">'
-        f'<g transform="translate({cmd_x},101)">'
-        f'<rect x="0" y="0" width="{cmd_w}" height="24" class="cmd-clip-rect"/>'
-        "</g>"
-        "</clipPath>"
-    )
-
     chrome_base, chrome_overlay = _crt_chrome(
         prefix,
         w,
@@ -251,19 +175,11 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
         "AMBER CONSOLE",
     )
 
-    reduced_selectors = ",".join(
-        [".tty-phase", ".bio-note"] + [f".nl{i}" for i in range(len(info_rows))]
-    )
-
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK}}}
 .bar-t{{font-size:11.5px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.4px}}
 .bar-r{{font-size:10.5px;fill:{AMBER_MID};letter-spacing:0.4px}}
-.b-head{{font-size:13.5px;font-weight:700;fill:{AMBER_BRIGHT}}}
-.b-sub{{font-size:12px;fill:{AMBER_MID}}}
-.b-txt{{font-size:12.5px;fill:{AMBER_SOFT}}}
-.ok{{font-size:12px;font-weight:700;fill:{AMBER_BRIGHT}}}
 .tty-h{{font-size:12px;fill:{AMBER_MID}}}
 .prm{{font-size:13px;font-weight:700;fill:{AMBER_CORE}}}
 .cmd{{font-size:13px;fill:{AMBER_BRIGHT}}}
@@ -275,65 +191,28 @@ text{{font-family:{FONT_STACK}}}
 .note{{font-size:12px;fill:{AMBER_MID}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .cur-blink{{animation:cur-flash 1.05s steps(1,end) infinite}}
-.bios-phase{{animation:bios-exit 0.10s ease 0.45s forwards}}
-.tty-phase{{opacity:0;animation:fade-in 0.12s ease 0.50s forwards}}
-.mem-fill{{transform-origin:274px 167px;transform:scaleX(0.05);animation:mem-load 0.28s ease 0.05s forwards}}
-.cmd-clip-rect{{transform-origin:0 0;transform:scaleX(0);animation:cmd-type 0.22s steps({len(cmd_text)},end) 0.52s forwards}}
-.type-cur{{opacity:0;animation:cur-slide 0.25s steps({len(cmd_text)},end) 0.51s forwards}}
-.bio-note{{opacity:0;animation:row-in 0.15s ease 0.90s forwards}}
-{"".join(bios_delays_css)}
-{"".join(info_delays_css)}
-@keyframes fade-in{{to{{opacity:1}}}}
-@keyframes row-in{{to{{opacity:1;transform:none}}}}
-@keyframes bios-exit{{to{{opacity:0;visibility:hidden}}}}
-@keyframes mem-load{{to{{transform:scaleX(1)}}}}
-@keyframes cmd-type{{to{{transform:scaleX(1)}}}}
-@keyframes cur-slide{{0%{{opacity:1;transform:translateX(0)}}92%{{opacity:1;transform:translateX({cmd_w}px)}}100%{{opacity:0;transform:translateX({cmd_w}px)}}}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
 @keyframes cur-flash{{0%,49%{{opacity:1}}50%,100%{{opacity:0}}}}
-@media (prefers-reduced-motion:reduce){{
-  .bios-phase{{display:none}}
-  {reduced_selectors}{{animation:none;opacity:1;transform:none}}
-  .cmd-clip-rect{{animation:none;transform:scaleX(1)}}
-  .type-cur{{display:none}}
-  .led,.cur-blink{{animation:none;opacity:1}}
-}}
+@media (prefers-reduced-motion:reduce){{.led,.cur-blink{{animation:none;opacity:1}}}}
 </style>
-{_crt_defs(prefix, w, h, extra=extra_defs)}
+{_crt_defs(prefix, w, h)}
 {chrome_base}
 <g clip-path="url(#{prefix}-scr)">
-  <!-- ONE-SHOT BIOS BOOT LOADING -->
-  <g class="bios-phase">
-    <text x="32" y="76" class="b-head" filter="url(#{prefix}-glow)">RAFIF-BIOS v2.6 // INITIALIZING PROFILE</text>
-    <text x="32" y="96" class="b-sub">Loading system info, skills, and repositories...</text>
-    <line x1="32" y1="112" x2="730" y2="112" stroke="{PANEL_BORDER}" stroke-width="1"/>
-    {_bios_chip_badge(756, 62)}
-    {"".join(bios_rows_svg)}
-    <g class="bl1">
-      <rect x="272" y="163" width="180" height="12" rx="2" fill="none" stroke="{AMBER_DIM}" stroke-width="1"/>
-      <rect x="274" y="165" width="176" height="8" rx="1" fill="{AMBER_CORE}" class="mem-fill" opacity="0.9"/>
-    </g>
-  </g>
+  <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
+  <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
+  <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
+  <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
+  <line x1="32" y1="132" x2="828" y2="132" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
 
-  <!-- PERMANENT DEVELOPER INFO SCREEN -->
-  <g class="tty-phase">
-    <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
-    <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
-    <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
-    <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" clip-path="url(#{prefix}-cmd-clip)" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
-    <rect x="{cmd_x}" y="106" width="8" height="14" rx="1" fill="{AMBER_BRIGHT}" class="type-cur"/>
-    <line x1="32" y1="132" x2="828" y2="132" stroke="{PANEL_DIVIDER}" stroke-width="1"/>
+  {_crt_ascii_art(28, 158)}
 
-    {_crt_ascii_art(28, 158)}
+  <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(t.display_name)} <tspan class="bar-r">(@{esc(t.username)})</tspan></text>
+  <line x1="382" y1="166" x2="820" y2="166" stroke="{PANEL_BORDER}" stroke-width="1"/>
+  {"".join(info_rows_svg)}
+  <text x="382" y="362" class="note">&gt; Exploring code, building web apps, and learning daily.</text>
 
-    <text x="382" y="158" class="nh" filter="url(#{prefix}-glow)">{esc(t.display_name)} <tspan class="bar-r">(@{esc(t.username)})</tspan></text>
-    <line x1="382" y1="166" x2="820" y2="166" stroke="{PANEL_BORDER}" stroke-width="1"/>
-    {"".join(info_rows_svg)}
-    <text x="382" y="362" class="note bio-note">&gt; Exploring code, building web apps, and learning daily.</text>
-
-    <text x="32" y="394" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
-    <rect x="{cmd_x}" y="382" width="8" height="14" rx="1" fill="{AMBER_BRIGHT}" class="cur-blink"/>
-  </g>
+  <text x="32" y="394" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
+  <rect x="{cmd_x}" y="382" width="8" height="14" rx="1" fill="{AMBER_BRIGHT}" class="cur-blink"/>
 </g>
 {chrome_overlay}
 </svg>'''

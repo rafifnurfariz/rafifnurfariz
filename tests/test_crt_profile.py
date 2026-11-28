@@ -39,10 +39,9 @@ class CrtSvgTests(unittest.TestCase):
             self.assertIn(required, bios)
             self.assertIn(required, btop)
 
-        self.assertIn("RAFIF-BIOS", bios)
         self.assertIn("whoami", bios)
-        self.assertIn("bios-exit 0.10s ease 0.45s forwards", bios)
-        self.assertNotIn(".bios-phase{animation:kf-bios-phase", bios)
+        self.assertNotIn("RAFIF-BIOS", bios)
+        self.assertNotIn("bios-phase", bios)
         self.assertIn("TOP LANGUAGES &amp; TOOLS", btop)
         self.assertIn("Photopip", btop)
 
