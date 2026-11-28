@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="media/svg/crt_bios.svg" alt="GitHub Blue CRT BIOS &amp; CMD Profile" width="835" />
+<img src="media/svg/crt_bios.svg" alt="GitHub Blue CMD Profile" width="835" />
 
 <br/>
 
@@ -16,6 +16,14 @@
 
 <br/>
 
-<img src="media/svg/btop_telemetry.svg" alt="GitHub Blue CRT Stats &amp; Projects" width="835" />
+<img src="media/svg/btop_telemetry.svg" alt="GitHub Blue Stats &amp; Activity" width="835" />
+
+<br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=2" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-light.svg?v=2" />
+  <img alt="Pac-Man contribution graph" src="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=2" width="835" />
+</picture>
 
 </div>

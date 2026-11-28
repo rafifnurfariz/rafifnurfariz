@@ -314,15 +314,15 @@ def _segmented_bar(x: int, y: int, pct: float, segments: int = 18) -> str:
 
 
 def render_btop_telemetry(t: ProfileTelemetry) -> str:
-    """Render simplified CMD-style GitHub Blue stats & projects SVG."""
-    w, h = 860, 466
+    """Render simplified CMD-style GitHub Blue stats SVG."""
+    w, h = 860, 284
     prefix = "btop"
     safe_user = clamp_text(t.username, 28)
     chrome_base, chrome_overlay = _crt_chrome(
         prefix,
         w,
         h,
-        f"CMD // GitHub Stats & Projects ({safe_user})",
+        f"CMD // GitHub Stats ({safe_user})",
         f"Updated {t.synced_at}",
     )
 
@@ -409,54 +409,9 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
         f'{"".join(spark_bars)}'
     )
 
-    p3 = _panel_box(22, 266, 816, 162, "PROJECTS & RECENT UPDATES", f"{len(t.repos)} REPOS")
-    proc_head = (
-        '<text x="38" y="292" class="tbl-h">REPOSITORY</text>'
-        '<text x="235" y="292" class="tbl-h">MAIN LANG</text>'
-        '<text x="360" y="292" class="tbl-h">CODE</text>'
-        '<text x="462" y="292" class="tbl-h">LAST PUSH</text>'
-        '<text x="580" y="292" class="tbl-h">CATEGORY</text>'
-        f'<line x1="38" y1="299" x2="822" y2="299" stroke="{PANEL_DIVIDER}" stroke-width="1"/>'
-    )
-    proc_rows = []
-    for idx, repo in enumerate(t.repos[:2]):
-        ry = 318 + idx * 21
-        category = "Profile README & Sync" if repo.is_profile_repo else clamp_text(repo.description or "App Repository", 28)
-        code_label = fmt_bytes(repo.code_bytes) if repo.code_bytes > 0 else fmt_repo_kb(repo.size_kb)
-        delay = 0.14 + idx * 0.06
-        proc_rows.append(
-            f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
-            f'<text x="38" y="{ry}" class="val-hi">{esc(clamp_text(repo.name, 22))}</text>'
-            f'<text x="235" y="{ry}" class="lbl">{esc(clamp_text(repo.language, 12))}</text>'
-            f'<text x="360" y="{ry}" class="val">{esc(code_label)}</text>'
-            f'<text x="462" y="{ry}" class="dim">{esc(repo.pushed_at)}</text>'
-            f'<text x="580" y="{ry}" class="ok">{esc(category)}</text>'
-            "</g>"
-        )
-
-    git_log_rows = [f'<line x1="38" y1="354" x2="822" y2="354" stroke="{PANEL_DIVIDER}" stroke-width="1"/>']
-    commits = t.recent_commits[:2]
-    if not commits:
-        git_log_rows.append('<text x="38" y="376" class="dim">* No recent public commits yet.</text>')
-    else:
-        for idx, c in enumerate(commits):
-            cy = 376 + idx * 21
-            delay = 0.26 + idx * 0.06
-            commit_msg = clamp_text(c.message or "(no commit message)", 58) or "(no commit message)"
-            short_sha = _strip_xml_illegal(c.sha).strip()[:7]
-            git_log_rows.append(
-                f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
-                f'<text x="38" y="{cy}" class="ok">*</text>'
-                f'<text x="54" y="{cy}" class="val-hi">{esc(short_sha)}</text>'
-                f'<text x="122" y="{cy}" class="dim">{esc(c.date)}</text>'
-                f'<text x="214" y="{cy}" class="lbl">[{esc(clamp_text(c.repo, 15))}]</text>'
-                f'<text x="342" y="{cy}" class="val">{esc(commit_msg)}</text>'
-                "</g>"
-            )
-
     footer = (
-        '<text x="26" y="446" class="fkey">Tip: Open any repository above to inspect live demos and source code.</text>'
-        '<text x="834" y="446" text-anchor="end" class="dim">AUTO-SYNC // GITHUB ACTIONS</text>'
+        '<text x="26" y="264" class="fkey">Tip: Open the Repositories tab to inspect projects and live demos.</text>'
+        '<text x="834" y="264" text-anchor="end" class="dim">AUTO-SYNC // GITHUB ACTIONS</text>'
     )
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
@@ -470,23 +425,20 @@ text{{font-family:{FONT_STACK}}}
 .val{{font-size:12px;fill:{ACCENT_SOFT}}}
 .val-hi{{font-size:12px;fill:{ACCENT_BRIGHT};font-weight:700}}
 .dim{{font-size:11.5px;fill:{ACCENT_MID}}}
-.ok{{font-size:11.5px;font-weight:700;fill:{ACCENT_BRIGHT}}}
 .tag{{font-size:10.5px;fill:{ACCENT_BRIGHT};font-weight:600}}
-.tbl-h{{font-size:10.5px;fill:{ACCENT_DIM};font-weight:700;letter-spacing:0.5px}}
 .fkey{{font-size:10.5px;fill:{ACCENT_CORE}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .in{{opacity:0;transform:translateY(8px);animation:panel-in 0.55s cubic-bezier(.16,1,.3,1) 0.12s forwards}}
 .bar-grow{{transform-origin:0 0;transform:scaleX(0);animation:bar-fill 0.65s cubic-bezier(.16,1,.3,1) both}}
 .pulse-bar{{transform-origin:0 0;transform:scaleY(0);animation:bar-rise 0.50s cubic-bezier(.16,1,.3,1) both}}
 .tag-pop{{opacity:0;transform:translateY(4px);animation:fade-up 0.40s ease both}}
-.row-glide{{opacity:0;transform:translateX(-8px);animation:fade-up 0.45s cubic-bezier(.16,1,.3,1) both}}
 @keyframes led-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
 @keyframes live-pulse{{0%,100%{{opacity:1}}50%{{opacity:0.58}}}}
 @keyframes panel-in{{to{{opacity:1;transform:none}}}}
 @keyframes bar-fill{{to{{transform:scaleX(1)}}}}
 @keyframes bar-rise{{to{{transform:scaleY(1)}}}}
 @keyframes fade-up{{to{{opacity:1;transform:none}}}}
-@media (prefers-reduced-motion:reduce){{.led,.p-hint,.in,.bar-grow,.pulse-bar,.tag-pop,.row-glide{{animation:none;opacity:1;transform:none}}}}
+@media (prefers-reduced-motion:reduce){{.led,.p-hint,.in,.bar-grow,.pulse-bar,.tag-pop{{animation:none;opacity:1;transform:none}}}}
 </style>
 {_crt_defs(prefix, w, h)}
 {chrome_base}
@@ -498,10 +450,6 @@ text{{font-family:{FONT_STACK}}}
   {p2}
   {"".join(kv_svg)}
   {spark_svg}
-  {p3}
-  {proc_head}
-  {"".join(proc_rows)}
-  {"".join(git_log_rows)}
   {footer}
 </g>
 </g>
