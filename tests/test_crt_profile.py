@@ -48,6 +48,8 @@ class CrtSvgTests(unittest.TestCase):
         self.assertIn("ico-float", btn_ig)
         self.assertIn("TOP LANGUAGES &amp; TOOLS", btop)
         self.assertIn("Photopip", btop)
+        self.assertIn("363.2 KB", btop)
+        self.assertIn("[rafifnurfariz]", btop)
 
     def test_readme_order_and_no_website_links(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

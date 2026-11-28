@@ -360,7 +360,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     proc_head = (
         '<text x="38" y="292" class="tbl-h">REPOSITORY</text>'
         '<text x="235" y="292" class="tbl-h">MAIN LANG</text>'
-        '<text x="360" y="292" class="tbl-h">SIZE</text>'
+        '<text x="360" y="292" class="tbl-h">CODE</text>'
         '<text x="462" y="292" class="tbl-h">LAST PUSH</text>'
         '<text x="580" y="292" class="tbl-h">CATEGORY</text>'
         f'<line x1="38" y1="299" x2="822" y2="299" stroke="{PANEL_DIVIDER}" stroke-width="1"/>'
@@ -369,12 +369,13 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     for idx, repo in enumerate(t.repos[:2]):
         ry = 318 + idx * 21
         category = "Profile README & Sync" if repo.is_profile_repo else clamp_text(repo.description or "App Repository", 28)
+        code_label = fmt_bytes(repo.code_bytes) if repo.code_bytes else fmt_repo_kb(repo.size_kb)
         delay = 0.14 + idx * 0.06
         proc_rows.append(
             f'<g class="row-glide" style="animation-delay:{delay:.2f}s">'
             f'<text x="38" y="{ry}" class="val-hi">{esc(clamp_text(repo.name, 22))}</text>'
             f'<text x="235" y="{ry}" class="lbl">{esc(clamp_text(repo.language, 12))}</text>'
-            f'<text x="360" y="{ry}" class="val">{esc(fmt_repo_kb(repo.size_kb))}</text>'
+            f'<text x="360" y="{ry}" class="val">{esc(code_label)}</text>'
             f'<text x="462" y="{ry}" class="dim">{esc(repo.pushed_at)}</text>'
             f'<text x="580" y="{ry}" class="ok">{esc(category)}</text>'
             '</g>'
@@ -393,8 +394,8 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
                 f'<text x="38" y="{cy}" class="ok">*</text>'
                 f'<text x="54" y="{cy}" class="val-hi">{esc(c.sha)}</text>'
                 f'<text x="122" y="{cy}" class="dim">{esc(c.date)}</text>'
-                f'<text x="214" y="{cy}" class="lbl">[{esc(clamp_text(c.repo, 12))}]</text>'
-                f'<text x="326" y="{cy}" class="val">{esc(clamp_text(c.message, 62))}</text>'
+                f'<text x="214" y="{cy}" class="lbl">[{esc(clamp_text(c.repo, 15))}]</text>'
+                f'<text x="342" y="{cy}" class="val">{esc(clamp_text(c.message, 58))}</text>'
                 '</g>'
             )
 

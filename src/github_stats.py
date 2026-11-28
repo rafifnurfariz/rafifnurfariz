@@ -65,6 +65,7 @@ class RepoSummary:
     description: str
     language: str
     size_kb: int
+    code_bytes: int
     stars: int
     forks: int
     pushed_at: str
@@ -78,6 +79,7 @@ class CommitEntry:
     repo: str
     message: str
     date: str
+    timestamp: str = ""
 
 
 @dataclass
@@ -140,21 +142,14 @@ def _parse_iso(ts: str | None) -> datetime | None:
         return None
 
 
-def _build_push_series(events: list[dict], now: datetime, days: int = 14) -> tuple[list[int], int]:
+def _build_commit_series(commit_dts: list[datetime], now: datetime, days: int = 14) -> tuple[list[int], int]:
     buckets = [0] * days
-    push_total = 0
     today = now.date()
-    for ev in events:
-        if ev.get("type") != "PushEvent":
-            continue
-        push_total += 1
-        dt = _parse_iso(ev.get("created_at"))
-        if not dt:
-            continue
+    for dt in commit_dts:
         delta = (today - dt.astimezone(timezone.utc).date()).days
         if 0 <= delta < days:
             buckets[days - 1 - delta] += 1
-    return buckets, push_total
+    return buckets, sum(buckets)
 
 
 def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
@@ -199,9 +194,12 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
             homepage = repo_home
 
         langs = api_get(repo["languages_url"], token)
+        repo_code_bytes = 0
         if isinstance(langs, dict):
             for lang, b_count in langs.items():
-                lang_bytes[lang] = lang_bytes.get(lang, 0) + int(b_count)
+                val = int(b_count)
+                repo_code_bytes += val
+                lang_bytes[lang] = lang_bytes.get(lang, 0) + val
 
         for topic in repo.get("topics") or []:
             mapped = TOPIC_DETECT.get(topic.lower())
@@ -234,6 +232,7 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
                 description=(repo.get("description") or "").strip(),
                 language=repo.get("language") or "Mixed",
                 size_kb=int(repo.get("size") or 0),
+                code_bytes=repo_code_bytes,
                 stars=stars,
                 forks=forks,
                 pushed_at=pushed_str,
@@ -250,32 +249,56 @@ def collect_telemetry(username: str, token: str = "") -> ProfileTelemetry:
         if lang_name in ("TypeScript", "Python", "JavaScript", "Go", "Rust"):
             add_stack(lang_name)
 
-    recent_commits: list[CommitEntry] = []
-    commit_targets = [r.name for r in repo_summaries[:2]]
-    for target in commit_targets:
-        commits = api_get(f"https://api.github.com/repos/{username}/{target}/commits?per_page=3", token)
+    since_iso = (now - timedelta(days=14)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    all_commits: list[CommitEntry] = []
+    commit_dts: list[datetime] = []
+    for repo_sum in repo_summaries:
+        commits = api_get(
+            f"https://api.github.com/repos/{username}/{repo_sum.name}/commits?since={since_iso}&per_page=100",
+            token,
+        )
+        if not isinstance(commits, list):
+            commits = api_get(
+                f"https://api.github.com/repos/{username}/{repo_sum.name}/commits?per_page=5",
+                token,
+            )
         if not isinstance(commits, list):
             continue
         for c in commits:
             msg = ((c.get("commit") or {}).get("message") or "").splitlines()[0].strip()
             if "[skip ci]" in msg.lower():
                 continue
-            c_dt = _parse_iso(((c.get("commit") or {}).get("author") or {}).get("date"))
-            recent_commits.append(
+            raw_date = ((c.get("commit") or {}).get("author") or {}).get("date") or ""
+            c_dt = _parse_iso(raw_date)
+            if c_dt:
+                commit_dts.append(c_dt)
+            all_commits.append(
                 CommitEntry(
                     sha=(c.get("sha") or "")[:7],
-                    repo=target,
+                    repo=repo_sum.name,
                     message=msg,
                     date=c_dt.strftime("%Y-%m-%d") if c_dt else "-",
+                    timestamp=c_dt.isoformat() if c_dt else "",
                 )
             )
-    recent_commits.sort(key=lambda c: c.date, reverse=True)
 
-    events = api_get(f"https://api.github.com/users/{username}/events/public?per_page=30", token)
-    push_series, recent_push_count = _build_push_series(
-        events if isinstance(events, list) else [],
-        now,
-    )
+    all_commits.sort(key=lambda c: c.timestamp or c.date, reverse=True)
+
+    # Pick latest commit per repository first so one busy repo doesn't hide other projects
+    recent_commits: list[CommitEntry] = []
+    seen_repos: set[str] = set()
+    for c in all_commits:
+        if c.repo not in seen_repos:
+            seen_repos.add(c.repo)
+            recent_commits.append(c)
+    for c in all_commits:
+        if len(recent_commits) >= 2:
+            break
+        if c not in recent_commits:
+            recent_commits.append(c)
+    recent_commits.sort(key=lambda c: c.timestamp or c.date, reverse=True)
+
+    push_series, recent_push_count = _build_commit_series(commit_dts, now)
 
     return ProfileTelemetry(
         username=user_data.get("login") or username,
@@ -325,12 +348,12 @@ def build_sample_telemetry(username: str = "rafifnurfariz") -> ProfileTelemetry:
         ],
         stacks=["Next.js", "React", "Fabric.js", "Sharp", "Vitest", "TypeScript", "Python"],
         repos=[
-            RepoSummary("Photopip", "Photo editor web app", "TypeScript", 10285, 0, 0, "2026-11-24", "https://photopip.vercel.app", False),
-            RepoSummary(username, "Personal GitHub profile", "Python", 217, 0, 0, "2026-11-28", "", True),
+            RepoSummary("Photopip", "Photo editor web app", "TypeScript", 10285, 371870, 0, 0, "2026-11-24", "https://photopip.vercel.app", False),
+            RepoSummary(username, "Personal GitHub profile", "Python", 217, 16254, 0, 0, "2026-11-28", "", True),
         ],
         recent_commits=[
-            CommitEntry("f2c8ccc", "Photopip", "fix: sinkronisasi teks kosong, font kustom, handle resize", "2026-11-24"),
-            CommitEntry("6d4f215", "Photopip", "fix: pertahankan warna dan font teks saat mengganti bingkai", "2026-11-24"),
+            CommitEntry("f05af98", username, "style: add smooth entrance animations across CRT SVGs", "2026-11-28", "2026-11-28T12:39:23+00:00"),
+            CommitEntry("f2c8ccc", "Photopip", "fix: sinkronisasi teks kosong, font kustom, handle resize", "2026-11-24", "2026-11-24T04:42:44+00:00"),
         ],
         push_series=[0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 6, 0, 0],
         recent_push_count=15,
