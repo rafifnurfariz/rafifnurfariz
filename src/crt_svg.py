@@ -5,21 +5,21 @@ import html
 
 from github_stats import ProfileTelemetry
 
-# Retro CRT Amber Phosphor Palette (#121212 charcoal + #ffb000 classic amber)
-CHASSIS_BG = "#0c0a08"
-CHASSIS_STROKE = "#332308"
-SCREEN_BG = "#121212"
-SCREEN_BAR = "#1a150c"
-SCREEN_STROKE = "#4d3408"
-PANEL_BORDER = "#3d2a09"
-PANEL_DIVIDER = "#291c06"
+# GitHub Dark UI Blue Palette (#0d1117 canvas + #58a6ff / #79c0ff GitHub blue)
+CHASSIS_BG = "#090d13"
+CHASSIS_STROKE = "#21262d"
+SCREEN_BG = "#0d1117"
+SCREEN_BAR = "#161b22"
+SCREEN_STROKE = "#30363d"
+PANEL_BORDER = "#26364d"
+PANEL_DIVIDER = "#21262d"
 
-AMBER_BRIGHT = "#ffd54f"
-AMBER_CORE = "#ffb000"
-AMBER_SOFT = "#ffe8a3"
-AMBER_MID = "#cc8800"
-AMBER_DIM = "#7a5200"
-AMBER_DARK = "#2d1f05"
+ACCENT_BRIGHT = "#79c0ff"
+ACCENT_CORE = "#58a6ff"
+ACCENT_SOFT = "#e6edf3"
+ACCENT_MID = "#7da5d8"
+ACCENT_DIM = "#388bfd"
+ACCENT_DARK = "#162438"
 
 FONT_STACK = "'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace"
 
@@ -58,12 +58,12 @@ def _crt_defs(prefix: str, width: int, height: int, extra: str = "") -> str:
     return (
         "<defs>"
         f'<pattern id="{prefix}-scan" width="4" height="3" patternUnits="userSpaceOnUse">'
-        '<rect width="4" height="1" fill="#000000" fill-opacity="0.22"/>'
+        '<rect width="4" height="1" fill="#000000" fill-opacity="0.20"/>'
         "</pattern>"
         f'<radialGradient id="{prefix}-vig" cx="50%" cy="48%" r="65%">'
-        f'<stop offset="0%" stop-color="{AMBER_CORE}" stop-opacity="0.06"/>'
-        '<stop offset="72%" stop-color="#121212" stop-opacity="0"/>'
-        '<stop offset="100%" stop-color="#000000" stop-opacity="0.45"/>'
+        f'<stop offset="0%" stop-color="{ACCENT_CORE}" stop-opacity="0.06"/>'
+        '<stop offset="72%" stop-color="#0d1117" stop-opacity="0"/>'
+        '<stop offset="100%" stop-color="#000000" stop-opacity="0.40"/>'
         "</radialGradient>"
         f'<filter id="{prefix}-glow" x="-15%" y="-15%" width="130%" height="130%">'
         '<feGaussianBlur stdDeviation="1.4" result="blur"/>'
@@ -89,7 +89,7 @@ def _crt_chrome(prefix: str, width: int, height: int, left_title: str, right_sta
         f'<rect x="12" y="12" width="{inner_w}" height="30" rx="9" fill="{SCREEN_BAR}"/>'
         f'<rect x="12" y="30" width="{inner_w}" height="12" fill="{SCREEN_BAR}"/>'
         f'<line x1="12" y1="42" x2="{width - 12}" y2="42" stroke="{SCREEN_STROKE}" stroke-width="1"/>'
-        f'<circle cx="28" cy="27" r="4" fill="{AMBER_CORE}" class="led" filter="url(#{prefix}-glow)"/>'
+        f'<circle cx="28" cy="27" r="4" fill="{ACCENT_CORE}" class="led" filter="url(#{prefix}-glow)"/>'
         f'<text x="40" y="31" class="bar-t">{esc(left_title)}</text>'
         f'<text x="{width - 26}" y="31" text-anchor="end" class="bar-r">{esc(right_status)}</text>'
     )
@@ -103,23 +103,23 @@ def _crt_chrome(prefix: str, width: int, height: int, left_title: str, right_sta
 
 
 def _crt_ascii_art(x: int, y: int) -> str:
-    """Retro CRT Monitor + coding mascot ASCII art in phosphor amber."""
+    """Retro CRT Monitor + coding mascot ASCII art in GitHub Blue."""
     lines: list[tuple[str, str]] = [
-        ("     _______________________     ", AMBER_MID),
-        ("    /                       \\    ", AMBER_MID),
-        ("   /  +-------------------+  \\   ", AMBER_MID),
-        ("  |   | C:\\> code_        |   |  ", AMBER_BRIGHT),
-        ("  |   |                   |   |  ", AMBER_CORE),
-        ("  |   |     {  /\\_/\\  }   |   |  ", AMBER_BRIGHT),
-        ("  |   |     (  >_<  )     |   |  ", AMBER_BRIGHT),
-        ("  |   |     /> </> <\\     |   |  ", AMBER_CORE),
-        ("  |   +-------------------+   |  ", AMBER_MID),
-        ("  |   [===]         (*) PWR   |  ", AMBER_DIM),
-        ("   \\_________________________/   ", AMBER_MID),
-        ("      ___|_____________|___      ", AMBER_DIM),
-        ("   __/_____________________\\__   ", AMBER_DIM),
-        ("  /  [][][][][][][][][][][]   \\  ", AMBER_MID),
-        (" /_____________________________\\ ", AMBER_DIM),
+        ("     _______________________     ", ACCENT_MID),
+        ("    /                       \\    ", ACCENT_MID),
+        ("   /  +-------------------+  \\   ", ACCENT_MID),
+        ("  |   | C:\\> code_        |   |  ", ACCENT_BRIGHT),
+        ("  |   |                   |   |  ", ACCENT_CORE),
+        ("  |   |     {  /\\_/\\  }   |   |  ", ACCENT_BRIGHT),
+        ("  |   |     (  >_<  )     |   |  ", ACCENT_BRIGHT),
+        ("  |   |     /> </> <\\     |   |  ", ACCENT_CORE),
+        ("  |   +-------------------+   |  ", ACCENT_MID),
+        ("  |   [===]         (*) PWR   |  ", ACCENT_DIM),
+        ("   \\_________________________/   ", ACCENT_MID),
+        ("      ___|_____________|___      ", ACCENT_DIM),
+        ("   __/_____________________\\__   ", ACCENT_DIM),
+        ("  /  [][][][][][][][][][][]   \\  ", ACCENT_MID),
+        (" /_____________________________\\ ", ACCENT_DIM),
     ]
     out = ['<g xml:space="preserve">']
     for idx, (line, color) in enumerate(lines):
@@ -178,7 +178,7 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
         w,
         h,
         f"CMD.EXE // {t.username}",
-        "AMBER CONSOLE",
+        "GITHUB CONSOLE",
     )
 
     reduced_rows = ",".join(f".nl{i}" for i in range(len(info_rows)))
@@ -186,17 +186,17 @@ def render_bios_terminal(t: ProfileTelemetry) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK}}}
-.bar-t{{font-size:11.5px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.4px}}
-.bar-r{{font-size:10.5px;fill:{AMBER_MID};letter-spacing:0.4px}}
-.tty-h{{font-size:12px;fill:{AMBER_MID}}}
-.prm{{font-size:13px;font-weight:700;fill:{AMBER_CORE}}}
-.cmd{{font-size:13px;fill:{AMBER_BRIGHT}}}
+.bar-t{{font-size:11.5px;font-weight:700;fill:{ACCENT_CORE};letter-spacing:0.4px}}
+.bar-r{{font-size:10.5px;fill:{ACCENT_MID};letter-spacing:0.4px}}
+.tty-h{{font-size:12px;fill:{ACCENT_MID}}}
+.prm{{font-size:13px;font-weight:700;fill:{ACCENT_CORE}}}
+.cmd{{font-size:13px;fill:{ACCENT_BRIGHT}}}
 .asc{{font-size:11.5px;white-space:pre}}
-.nh{{font-size:14px;font-weight:700;fill:{AMBER_BRIGHT}}}
-.nk{{font-size:12.5px;font-weight:700;fill:{AMBER_CORE}}}
-.nd{{font-size:12.5px;fill:{AMBER_DIM}}}
-.nv{{font-size:12.5px;fill:{AMBER_SOFT}}}
-.note{{font-size:12px;fill:{AMBER_MID}}}
+.nh{{font-size:14px;font-weight:700;fill:{ACCENT_BRIGHT}}}
+.nk{{font-size:12.5px;font-weight:700;fill:{ACCENT_CORE}}}
+.nd{{font-size:12.5px;fill:{ACCENT_DIM}}}
+.nv{{font-size:12.5px;fill:{ACCENT_SOFT}}}
+.note{{font-size:12px;fill:{ACCENT_MID}}}
 .hdr-in{{opacity:0;transform:translateY(6px);animation:card-in 0.50s cubic-bezier(.16,1,.3,1) 0.05s forwards}}
 .asc-in{{opacity:0;transform:translateY(8px);animation:card-in 0.60s cubic-bezier(.16,1,.3,1) 0.15s forwards}}
 .asc-glow{{animation:crt-breathe 3.4s ease-in-out 0.8s infinite}}
@@ -215,7 +215,7 @@ text{{font-family:{FONT_STACK}}}
 {chrome_base}
 <g clip-path="url(#{prefix}-scr)">
   <g class="hdr-in">
-    <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
+    <text x="32" y="74" class="tty-h">Microsoft Windows [GitHub Console] // Developer Profile</text>
     <text x="32" y="92" class="tty-h">(c) 2026 {esc(t.display_name)}. Welcome to my GitHub workspace.</text>
     <text x="32" y="118" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
     <text x="{cmd_x}" y="118" textLength="{cmd_w - 2}" class="cmd" filter="url(#{prefix}-glow)">{esc(cmd_text)}</text>
@@ -232,7 +232,7 @@ text{{font-family:{FONT_STACK}}}
   <text x="382" y="362" class="note note-in">&gt; Exploring code, building web apps, and learning daily.</text>
 
   <text x="32" y="394" textLength="{prompt_w}" class="prm">{esc(prompt_text)}</text>
-  <rect x="{cmd_x}" y="382" width="8" height="14" rx="1" fill="{AMBER_BRIGHT}" class="cur-blink"/>
+  <rect x="{cmd_x}" y="382" width="8" height="14" rx="1" fill="{ACCENT_BRIGHT}" class="cur-blink"/>
 </g>
 {chrome_overlay}
 </svg>'''
@@ -247,7 +247,7 @@ def _panel_box(x: int, y: int, w: int, h: int, title: str, right_hint: str = "")
         else ""
     )
     return (
-        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="#14110c" stroke="{PANEL_BORDER}" stroke-width="1.2"/>'
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="#111722" stroke="{PANEL_BORDER}" stroke-width="1.2"/>'
         f'<rect x="{x + 12}" y="{y - 8}" width="{title_w:.1f}" height="16" fill="{SCREEN_BG}"/>'
         f'<text x="{x + 19}" y="{y + 3}" class="p-title">{esc(title)}</text>'
         f"{right_svg}"
@@ -261,17 +261,17 @@ def _segmented_bar(x: int, y: int, pct: float, segments: int = 18) -> str:
     for idx in range(segments):
         sx = x + idx * (seg_w + gap)
         if idx < filled:
-            fill = AMBER_BRIGHT if idx >= segments - 4 else AMBER_CORE
+            fill = ACCENT_BRIGHT if idx >= segments - 4 else ACCENT_CORE
             opacity = "0.95"
         else:
-            fill = AMBER_DARK
-            opacity = "0.8"
+            fill = ACCENT_DARK
+            opacity = "0.85"
         rects.append(f'<rect x="{sx}" y="{y}" width="{seg_w}" height="10" rx="1.2" fill="{fill}" opacity="{opacity}"/>')
     return "".join(rects)
 
 
 def render_btop_telemetry(t: ProfileTelemetry) -> str:
-    """Render simplified CMD-style Retro Amber GitHub stats & projects SVG."""
+    """Render simplified CMD-style GitHub Blue stats & projects SVG."""
     w, h = 860, 466
     prefix = "btop"
     chrome_base, chrome_overlay = _crt_chrome(
@@ -308,7 +308,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
         delay = 0.16 + t_idx * 0.04
         module_tags.append(
             f'<g class="tag-pop" style="animation-delay:{delay:.2f}s">'
-            f'<rect x="{tag_x}" y="{tag_y}" width="{tw:.1f}" height="20" rx="3" fill="#1d1609" stroke="{AMBER_DIM}" stroke-width="0.9"/>'
+            f'<rect x="{tag_x}" y="{tag_y}" width="{tw:.1f}" height="20" rx="3" fill="#132238" stroke="{ACCENT_DIM}" stroke-width="0.9"/>'
             f'<text x="{tag_x + tw / 2:.1f}" y="{tag_y + 13.5}" text-anchor="middle" class="tag">{esc(mod)}</text>'
             '</g>'
         )
@@ -340,7 +340,7 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     for i, val in enumerate(series[:14]):
         bh = max(4, round((val / peak) * max_bar_h)) if val > 0 else 3
         bx = base_x + i * (bar_w + gap)
-        fill = AMBER_BRIGHT if val == max(series) and val > 0 else (AMBER_CORE if val > 0 else AMBER_DARK)
+        fill = ACCENT_BRIGHT if val == max(series) and val > 0 else (ACCENT_CORE if val > 0 else ACCENT_DARK)
         delay = 0.08 + i * 0.025
         spark_bars.append(
             f'<g transform="translate({bx},228)">'
@@ -407,18 +407,18 @@ def render_btop_telemetry(t: ProfileTelemetry) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK}}}
-.bar-t{{font-size:11.5px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.4px}}
-.bar-r{{font-size:10.5px;fill:{AMBER_MID};letter-spacing:0.4px}}
-.p-title{{font-size:11.5px;font-weight:700;fill:{AMBER_BRIGHT}}}
-.p-hint{{font-size:10.5px;font-weight:700;fill:{AMBER_CORE};animation:live-pulse 2.4s ease-in-out infinite}}
-.lbl{{font-size:12px;fill:{AMBER_CORE};font-weight:600}}
-.val{{font-size:12px;fill:{AMBER_SOFT}}}
-.val-hi{{font-size:12px;fill:{AMBER_BRIGHT};font-weight:700}}
-.dim{{font-size:11.5px;fill:{AMBER_MID}}}
-.ok{{font-size:11.5px;font-weight:700;fill:{AMBER_BRIGHT}}}
-.tag{{font-size:10.5px;fill:{AMBER_BRIGHT};font-weight:600}}
-.tbl-h{{font-size:10.5px;fill:{AMBER_DIM};font-weight:700;letter-spacing:0.5px}}
-.fkey{{font-size:10.5px;fill:{AMBER_CORE}}}
+.bar-t{{font-size:11.5px;font-weight:700;fill:{ACCENT_CORE};letter-spacing:0.4px}}
+.bar-r{{font-size:10.5px;fill:{ACCENT_MID};letter-spacing:0.4px}}
+.p-title{{font-size:11.5px;font-weight:700;fill:{ACCENT_BRIGHT}}}
+.p-hint{{font-size:10.5px;font-weight:700;fill:{ACCENT_CORE};animation:live-pulse 2.4s ease-in-out infinite}}
+.lbl{{font-size:12px;fill:{ACCENT_CORE};font-weight:600}}
+.val{{font-size:12px;fill:{ACCENT_SOFT}}}
+.val-hi{{font-size:12px;fill:{ACCENT_BRIGHT};font-weight:700}}
+.dim{{font-size:11.5px;fill:{ACCENT_MID}}}
+.ok{{font-size:11.5px;font-weight:700;fill:{ACCENT_BRIGHT}}}
+.tag{{font-size:10.5px;fill:{ACCENT_BRIGHT};font-weight:600}}
+.tbl-h{{font-size:10.5px;fill:{ACCENT_DIM};font-weight:700;letter-spacing:0.5px}}
+.fkey{{font-size:10.5px;fill:{ACCENT_CORE}}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
 .in{{opacity:0;transform:translateY(8px);animation:panel-in 0.55s cubic-bezier(.16,1,.3,1) 0.12s forwards}}
 .bar-grow{{transform-origin:0 0;transform:scaleX(0);animation:bar-fill 0.65s cubic-bezier(.16,1,.3,1) both}}
@@ -493,8 +493,8 @@ def render_cli_button(label: str, icon: str = "", delay_s: float = 0.0) -> str:
     )
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
-text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{AMBER_BRIGHT}}}
-.pre{{fill:{AMBER_CORE}}}
+text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{ACCENT_SOFT}}}
+.pre{{fill:{ACCENT_CORE}}}
 .btn{{opacity:0;transform:translateY(8px);animation:btn-in 0.55s cubic-bezier(.16,1,.3,1) {delay_s + 0.20:.2f}s forwards}}
 .ico{{animation:ico-float 3.4s ease-in-out infinite}}
 @keyframes btn-in{{to{{opacity:1;transform:none}}}}
@@ -503,8 +503,8 @@ text{{font-family:{FONT_STACK};font-size:12px;font-weight:700;fill:{AMBER_BRIGHT
 </style>
 {logo_defs}
 <g class="btn">
-<rect width="{w}" height="{h}" rx="7" fill="#14110c" stroke="{AMBER_DIM}" stroke-width="1.2"/>
-<rect x="2" y="2" width="{w - 4}" height="{h - 4}" rx="5" fill="none" stroke="#291c06" stroke-width="1"/>
+<rect width="{w}" height="{h}" rx="7" fill="{SCREEN_BAR}" stroke="{SCREEN_STROKE}" stroke-width="1.2"/>
+<rect x="2" y="2" width="{w - 4}" height="{h - 4}" rx="5" fill="none" stroke="#1e293b" stroke-width="1"/>
 {logo_svg}
 <text x="{text_x:.1f}" y="23" text-anchor="{anchor}"><tspan class="pre">&gt;_ </tspan>{esc(label)}</text>
 </g>

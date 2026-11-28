@@ -1,4 +1,4 @@
-"""Converts mood-cow.webp into a compact Retro CRT Amber animated GIF (350x356)."""
+"""Converts mood-cow.webp into a compact GitHub Blue CRT animated GIF (350x356)."""
 from __future__ import annotations
 
 import os
@@ -9,17 +9,17 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageSequence
 from scipy import ndimage
 
-CHASSIS_BG = (12, 10, 8)
-CHASSIS_STROKE = (51, 35, 8)
-SCREEN_BG = (18, 18, 18)
-SCREEN_BAR = (26, 21, 12)
-SCREEN_STROKE = (77, 52, 8)
-PANEL_DIVIDER = (41, 28, 6)
+CHASSIS_BG = (9, 13, 19)
+CHASSIS_STROKE = (33, 38, 45)
+SCREEN_BG = (13, 17, 23)
+SCREEN_BAR = (22, 27, 34)
+SCREEN_STROKE = (48, 54, 61)
+PANEL_DIVIDER = (33, 38, 45)
 
-AMBER_BRIGHT = (255, 213, 79)
-AMBER_CORE = (255, 176, 0)
-AMBER_MID = (204, 136, 0)
-AMBER_DIM = (122, 82, 0)
+BLUE_BRIGHT = (121, 192, 255)
+BLUE_CORE = (88, 166, 255)
+BLUE_MID = (125, 165, 216)
+BLUE_DIM = (56, 139, 253)
 
 
 def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -62,9 +62,9 @@ def _extract_cow_rgba(frame_rgba: Image.Image) -> Image.Image:
 
     gray = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]) / 255.0
     stops = np.array([0.0, 0.25, 0.55, 0.82, 1.0])
-    ramp_r = np.interp(gray, stops, [56, 118, 224, 255, 255])
-    ramp_g = np.interp(gray, stops, [36, 76, 152, 206, 232])
-    ramp_b = np.interp(gray, stops, [8, 12, 8, 60, 156])
+    ramp_r = np.interp(gray, stops, [26, 48, 88, 155, 224])
+    ramp_g = np.interp(gray, stops, [52, 98, 166, 212, 240])
+    ramp_b = np.interp(gray, stops, [92, 172, 255, 255, 255])
 
     out = np.zeros_like(arr)
     out[:, :, 0] = np.clip(ramp_r, 0, 255).astype(np.uint8)
@@ -85,17 +85,17 @@ def _build_base_chassis(w: int, h: int, font_b: ImageFont.ImageFont, font_r: Ima
     draw.rectangle([12, 28, w - 13, 40], fill=SCREEN_BAR)
     draw.line([12, 40, w - 13, 40], fill=SCREEN_STROKE, width=1)
 
-    draw.text((38, 20), "MOOD // Polish Cow", font=font_b, fill=AMBER_CORE)
-    draw.text((w - 24, 21), "VIBING", font=font_r, fill=AMBER_MID, anchor="ra")
+    draw.text((38, 20), "MOOD // Polish Cow", font=font_b, fill=BLUE_CORE)
+    draw.text((w - 24, 21), "VIBING", font=font_r, fill=BLUE_MID, anchor="ra")
 
     draw.line([22, 322, w - 22, 322], fill=PANEL_DIVIDER, width=1)
-    draw.text((24, 328), "> status:", font=font_b, fill=AMBER_CORE)
-    draw.text((84, 328), "coding & vibing", font=font_r, fill=AMBER_BRIGHT)
+    draw.text((24, 328), "> status:", font=font_b, fill=BLUE_CORE)
+    draw.text((84, 328), "coding & vibing", font=font_r, fill=BLUE_BRIGHT)
     return base
 
 
-def _build_amber_palette(sample_rgb: Image.Image) -> Image.Image:
-    """Create a deterministic shared 64-color Retro CRT Amber palette for GIF frames."""
+def _build_blue_palette(sample_rgb: Image.Image) -> Image.Image:
+    """Create a deterministic shared 64-color GitHub Blue palette for GIF frames."""
     return sample_rgb.quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
 
 
@@ -103,7 +103,7 @@ def render_cow_crt(
     src_path: str | Path = "media/images/mood-cow.webp",
     out_path: str | Path = "media/images/polish-cow-crt.gif",
 ) -> Path:
-    """Render Polish Cow frames inside a compact 350x356 Retro CRT Amber monitor GIF."""
+    """Render Polish Cow frames inside a compact 350x356 GitHub Blue CRT GIF."""
     w, h = 350, 356
     font_b = _load_font(11, bold=True)
     font_r = _load_font(10, bold=False)
@@ -113,7 +113,7 @@ def render_cow_crt(
 
     scan = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     s_arr = np.asarray(scan, dtype=np.uint8).copy()
-    s_arr[41 : h - 13 : 3, 13 : w - 13] = (0, 0, 0, 56)
+    s_arr[41 : h - 13 : 3, 13 : w - 13] = (0, 0, 0, 52)
     scan_overlay = Image.fromarray(s_arr, mode="RGBA")
 
     eq_heights = [
@@ -140,9 +140,9 @@ def render_cow_crt(
 
         halo = Image.new("RGBA", (w, h), (0, 0, 0, 0))
         cow_alpha = cow_resized.getchannel("A")
-        amber_fill = Image.new("RGBA", (nw, nh), (*AMBER_CORE, 255))
-        amber_fill.putalpha(cow_alpha.point(lambda p: int(p * 0.22)))
-        halo.paste(amber_fill, (cx, cy))
+        blue_fill = Image.new("RGBA", (nw, nh), (*BLUE_CORE, 255))
+        blue_fill.putalpha(cow_alpha.point(lambda p: int(p * 0.22)))
+        halo.paste(blue_fill, (cx, cy))
         halo = halo.filter(ImageFilter.GaussianBlur(radius=4))
         canvas = Image.alpha_composite(canvas, halo)
 
@@ -153,9 +153,9 @@ def render_cow_crt(
         fdraw = ImageDraw.Draw(canvas)
         pulse = 0.5 + 0.5 * np.sin((idx / total_f) * 2 * np.pi)
         led_col = (
-            int(175 + 80 * pulse),
-            int(115 + 65 * pulse),
-            0,
+            int(56 + 48 * pulse),
+            int(128 + 52 * pulse),
+            255,
             255,
         )
         fdraw.ellipse([22, 22, 30, 30], fill=led_col)
@@ -164,13 +164,13 @@ def render_cow_crt(
         for b_i, bh in enumerate(bars):
             bx = w - 84 + b_i * 5
             by = 339 - bh
-            fdraw.rectangle([bx, by, bx + 3, 339], fill=(*AMBER_CORE, 235))
-        fdraw.text((w - 24, 329), "[GIF]", font=font_r, fill=AMBER_DIM, anchor="ra")
+            fdraw.rectangle([bx, by, bx + 3, 339], fill=(*BLUE_CORE, 235))
+        fdraw.text((w - 24, 329), "[GIF]", font=font_r, fill=BLUE_DIM, anchor="ra")
 
         canvas = Image.alpha_composite(canvas, scan_overlay)
         rgb_frames.append(canvas.convert("RGB"))
 
-    palette_ref = _build_amber_palette(rgb_frames[0])
+    palette_ref = _build_blue_palette(rgb_frames[0])
     paletted_frames = [
         fr.quantize(palette=palette_ref, dither=Image.Dither.NONE)
         for fr in rgb_frames

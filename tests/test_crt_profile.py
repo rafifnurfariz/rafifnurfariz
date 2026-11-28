@@ -35,7 +35,7 @@ class CrtSvgTests(unittest.TestCase):
         self.assertIn("ig-btn", btn_ig)
         self.assertIn("#FE2C55", btn_tt)
 
-        for required in ("#121212", "#ffb000", "prefers-reduced-motion:reduce"):
+        for required in ("#0d1117", "#58a6ff", "prefers-reduced-motion:reduce"):
             self.assertIn(required, bios)
             self.assertIn(required, btop)
 
@@ -93,7 +93,7 @@ class CrtSvgTests(unittest.TestCase):
             root = ET.fromstring(svg)
             self.assertEqual((root.attrib["width"], root.attrib["height"]), ("350", "356"))
             self.assertIn("Currents", svg)
-            self.assertIn("#ffb000", svg)
+            self.assertIn("#58a6ff", svg)
 
             gif_path = render_cow_crt(ROOT / "media/images/mood-cow.webp", cow_out)
             with Image.open(gif_path) as im:

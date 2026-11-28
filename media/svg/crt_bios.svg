@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="860" height="420" viewBox="0 0 860 420">
 <style>
 text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-Regular',ui-monospace,monospace}
-.bar-t{font-size:11.5px;font-weight:700;fill:#ffb000;letter-spacing:0.4px}
-.bar-r{font-size:10.5px;fill:#cc8800;letter-spacing:0.4px}
-.tty-h{font-size:12px;fill:#cc8800}
-.prm{font-size:13px;font-weight:700;fill:#ffb000}
-.cmd{font-size:13px;fill:#ffd54f}
+.bar-t{font-size:11.5px;font-weight:700;fill:#58a6ff;letter-spacing:0.4px}
+.bar-r{font-size:10.5px;fill:#7da5d8;letter-spacing:0.4px}
+.tty-h{font-size:12px;fill:#7da5d8}
+.prm{font-size:13px;font-weight:700;fill:#58a6ff}
+.cmd{font-size:13px;fill:#79c0ff}
 .asc{font-size:11.5px;white-space:pre}
-.nh{font-size:14px;font-weight:700;fill:#ffd54f}
-.nk{font-size:12.5px;font-weight:700;fill:#ffb000}
-.nd{font-size:12.5px;fill:#7a5200}
-.nv{font-size:12.5px;fill:#ffe8a3}
-.note{font-size:12px;fill:#cc8800}
+.nh{font-size:14px;font-weight:700;fill:#79c0ff}
+.nk{font-size:12.5px;font-weight:700;fill:#58a6ff}
+.nd{font-size:12.5px;fill:#388bfd}
+.nv{font-size:12.5px;fill:#e6edf3}
+.note{font-size:12px;fill:#7da5d8}
 .hdr-in{opacity:0;transform:translateY(6px);animation:card-in 0.50s cubic-bezier(.16,1,.3,1) 0.05s forwards}
 .asc-in{opacity:0;transform:translateY(8px);animation:card-in 0.60s cubic-bezier(.16,1,.3,1) 0.15s forwards}
 .asc-glow{animation:crt-breathe 3.4s ease-in-out 0.8s infinite}
@@ -26,28 +26,28 @@ text{font-family:'Cascadia Mono','JetBrains Mono','Fira Code',Consolas,'SFMono-R
 @keyframes cur-flash{0%,49%{opacity:1}50%,100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.hdr-in,.asc-in,.asc-glow,.note-in,.led,.cur-blink,.nl0,.nl1,.nl2,.nl3,.nl4,.nl5,.nl6{animation:none;opacity:1;transform:none}}
 </style>
-<defs><pattern id="bios-scan" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#000000" fill-opacity="0.22"/></pattern><radialGradient id="bios-vig" cx="50%" cy="48%" r="65%"><stop offset="0%" stop-color="#ffb000" stop-opacity="0.06"/><stop offset="72%" stop-color="#121212" stop-opacity="0"/><stop offset="100%" stop-color="#000000" stop-opacity="0.45"/></radialGradient><filter id="bios-glow" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="1.4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="bios-scr"><rect x="12" y="12" width="836" height="396" rx="9"/></clipPath></defs>
-<rect width="860" height="420" rx="14" fill="#0c0a08" stroke="#332308" stroke-width="1.5"/><rect x="12" y="12" width="836" height="396" rx="9" fill="#121212" stroke="#4d3408" stroke-width="1.2"/><rect x="12" y="12" width="836" height="30" rx="9" fill="#1a150c"/><rect x="12" y="30" width="836" height="12" fill="#1a150c"/><line x1="12" y1="42" x2="848" y2="42" stroke="#4d3408" stroke-width="1"/><circle cx="28" cy="27" r="4" fill="#ffb000" class="led" filter="url(#bios-glow)"/><text x="40" y="31" class="bar-t">CMD.EXE // rafifnurfariz</text><text x="834" y="31" text-anchor="end" class="bar-r">AMBER CONSOLE</text>
+<defs><pattern id="bios-scan" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#000000" fill-opacity="0.20"/></pattern><radialGradient id="bios-vig" cx="50%" cy="48%" r="65%"><stop offset="0%" stop-color="#58a6ff" stop-opacity="0.06"/><stop offset="72%" stop-color="#0d1117" stop-opacity="0"/><stop offset="100%" stop-color="#000000" stop-opacity="0.40"/></radialGradient><filter id="bios-glow" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="1.4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="bios-scr"><rect x="12" y="12" width="836" height="396" rx="9"/></clipPath></defs>
+<rect width="860" height="420" rx="14" fill="#090d13" stroke="#21262d" stroke-width="1.5"/><rect x="12" y="12" width="836" height="396" rx="9" fill="#0d1117" stroke="#30363d" stroke-width="1.2"/><rect x="12" y="12" width="836" height="30" rx="9" fill="#161b22"/><rect x="12" y="30" width="836" height="12" fill="#161b22"/><line x1="12" y1="42" x2="848" y2="42" stroke="#30363d" stroke-width="1"/><circle cx="28" cy="27" r="4" fill="#58a6ff" class="led" filter="url(#bios-glow)"/><text x="40" y="31" class="bar-t">CMD.EXE // rafifnurfariz</text><text x="834" y="31" text-anchor="end" class="bar-r">GITHUB CONSOLE</text>
 <g clip-path="url(#bios-scr)">
   <g class="hdr-in">
-    <text x="32" y="74" class="tty-h">Microsoft Windows [Amber Console] // Developer Profile</text>
+    <text x="32" y="74" class="tty-h">Microsoft Windows [GitHub Console] // Developer Profile</text>
     <text x="32" y="92" class="tty-h">(c) 2026 Rapiiipp. Welcome to my GitHub workspace.</text>
     <text x="32" y="118" textLength="179" class="prm">C:\Users\rafifnurfariz&gt;</text>
     <text x="219" y="118" textLength="47" class="cmd" filter="url(#bios-glow)">whoami</text>
-    <line x1="32" y1="132" x2="828" y2="132" stroke="#291c06" stroke-width="1"/>
+    <line x1="32" y1="132" x2="828" y2="132" stroke="#21262d" stroke-width="1"/>
   </g>
 
-  <g class="asc-in"><g class="asc-glow"><g xml:space="preserve"><text x="28" y="158" class="asc" fill="#cc8800">     _______________________     </text><text x="28" y="174" class="asc" fill="#cc8800">    /                       \    </text><text x="28" y="190" class="asc" fill="#cc8800">   /  +-------------------+  \   </text><text x="28" y="206" class="asc" fill="#ffd54f">  |   | C:\&gt; code_        |   |  </text><text x="28" y="222" class="asc" fill="#ffb000">  |   |                   |   |  </text><text x="28" y="238" class="asc" fill="#ffd54f">  |   |     {  /\_/\  }   |   |  </text><text x="28" y="254" class="asc" fill="#ffd54f">  |   |     (  &gt;_&lt;  )     |   |  </text><text x="28" y="270" class="asc" fill="#ffb000">  |   |     /&gt; &lt;/&gt; &lt;\     |   |  </text><text x="28" y="286" class="asc" fill="#cc8800">  |   +-------------------+   |  </text><text x="28" y="302" class="asc" fill="#7a5200">  |   [===]         (*) PWR   |  </text><text x="28" y="318" class="asc" fill="#cc8800">   \_________________________/   </text><text x="28" y="334" class="asc" fill="#7a5200">      ___|_____________|___      </text><text x="28" y="350" class="asc" fill="#7a5200">   __/_____________________\__   </text><text x="28" y="366" class="asc" fill="#cc8800">  /  [][][][][][][][][][][]   \  </text><text x="28" y="382" class="asc" fill="#7a5200"> /_____________________________\ </text></g></g></g>
+  <g class="asc-in"><g class="asc-glow"><g xml:space="preserve"><text x="28" y="158" class="asc" fill="#7da5d8">     _______________________     </text><text x="28" y="174" class="asc" fill="#7da5d8">    /                       \    </text><text x="28" y="190" class="asc" fill="#7da5d8">   /  +-------------------+  \   </text><text x="28" y="206" class="asc" fill="#79c0ff">  |   | C:\&gt; code_        |   |  </text><text x="28" y="222" class="asc" fill="#58a6ff">  |   |                   |   |  </text><text x="28" y="238" class="asc" fill="#79c0ff">  |   |     {  /\_/\  }   |   |  </text><text x="28" y="254" class="asc" fill="#79c0ff">  |   |     (  &gt;_&lt;  )     |   |  </text><text x="28" y="270" class="asc" fill="#58a6ff">  |   |     /&gt; &lt;/&gt; &lt;\     |   |  </text><text x="28" y="286" class="asc" fill="#7da5d8">  |   +-------------------+   |  </text><text x="28" y="302" class="asc" fill="#388bfd">  |   [===]         (*) PWR   |  </text><text x="28" y="318" class="asc" fill="#7da5d8">   \_________________________/   </text><text x="28" y="334" class="asc" fill="#388bfd">      ___|_____________|___      </text><text x="28" y="350" class="asc" fill="#388bfd">   __/_____________________\__   </text><text x="28" y="366" class="asc" fill="#7da5d8">  /  [][][][][][][][][][][]   \  </text><text x="28" y="382" class="asc" fill="#388bfd"> /_____________________________\ </text></g></g></g>
 
   <g class="hdr-in">
     <text x="382" y="158" class="nh" filter="url(#bios-glow)">Rapiiipp <tspan class="bar-r">(@rafifnurfariz)</tspan></text>
-    <line x1="382" y1="166" x2="820" y2="166" stroke="#3d2a09" stroke-width="1"/>
+    <line x1="382" y1="166" x2="820" y2="166" stroke="#26364d" stroke-width="1"/>
   </g>
   <g class="nl0"><text x="382" y="186" class="nk">NAME</text><text x="468" y="186" class="nd">:</text><text x="482" y="186" class="nv">Rapiiipp (@rafifnurfariz)</text></g><g class="nl1"><text x="382" y="209" class="nk">ROLE</text><text x="468" y="209" class="nd">:</text><text x="482" y="209" class="nv">Beginner Programmer · Coding &amp; Learning</text></g><g class="nl2"><text x="382" y="232" class="nk">SKILLS</text><text x="468" y="232" class="nd">:</text><text x="482" y="232" class="nv">Next.js · React · Fabric.js · Sharp</text></g><g class="nl3"><text x="382" y="255" class="nk">LANGUAGES</text><text x="468" y="255" class="nd">:</text><text x="482" y="255" class="nv">TypeScript · CSS · Python · JavaScript</text></g><g class="nl4"><text x="382" y="278" class="nk">TOOLS</text><text x="468" y="278" class="nd">:</text><text x="482" y="278" class="nv">Windows · VS Code · GitHub</text></g><g class="nl5"><text x="382" y="301" class="nk">PROJECTS</text><text x="468" y="301" class="nd">:</text><text x="482" y="301" class="nv">02 public repositories (e.g. Photopip)</text></g><g class="nl6"><text x="382" y="324" class="nk">SINCE</text><text x="468" y="324" class="nd">:</text><text x="482" y="324" class="nv">2026-09-15 (74d on GitHub)</text></g>
   <text x="382" y="362" class="note note-in">&gt; Exploring code, building web apps, and learning daily.</text>
 
   <text x="32" y="394" textLength="179" class="prm">C:\Users\rafifnurfariz&gt;</text>
-  <rect x="219" y="382" width="8" height="14" rx="1" fill="#ffd54f" class="cur-blink"/>
+  <rect x="219" y="382" width="8" height="14" rx="1" fill="#79c0ff" class="cur-blink"/>
 </g>
 <g clip-path="url(#bios-scr)"><rect x="12" y="42" width="836" height="366" fill="url(#bios-vig)"/><rect x="12" y="42" width="836" height="366" fill="url(#bios-scan)"/></g>
 </svg>

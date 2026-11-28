@@ -1,4 +1,4 @@
-"""Generates a compact Retro CRT Amber ASCII SVG from an album cover or image."""
+"""Generates a compact GitHub Blue CRT ASCII SVG from an album cover or image."""
 from __future__ import annotations
 
 import html
@@ -9,10 +9,10 @@ import numpy as np
 from PIL import Image, ImageFilter, ImageOps
 
 from crt_svg import (
-    AMBER_BRIGHT,
-    AMBER_CORE,
-    AMBER_DIM,
-    AMBER_MID,
+    ACCENT_BRIGHT,
+    ACCENT_CORE,
+    ACCENT_DIM,
+    ACCENT_MID,
     FONT_STACK,
     PANEL_DIVIDER,
     _crt_chrome,
@@ -24,14 +24,14 @@ RAMP = " .:-=+*#%@"
 
 def _tier_color(val: float) -> str:
     if val >= 0.72:
-        return AMBER_BRIGHT
+        return ACCENT_BRIGHT
     if val >= 0.38:
-        return AMBER_CORE
-    return AMBER_MID
+        return ACCENT_CORE
+    return ACCENT_MID
 
 
 def _build_spans(row_vals: np.ndarray, row_y: float, x_off: float, cw: float) -> list[str]:
-    """Group adjacent non-space runs by amber brightness tier for crisp SVG text."""
+    """Group adjacent non-space runs by brightness tier for crisp SVG text."""
     spans: list[str] = []
     n = len(row_vals)
     idx = 0
@@ -63,7 +63,7 @@ def render_currents_crt(
     src_path: str | Path = "media/images/currents-cover.jpg",
     out_path: str | Path = "media/svg/currents_crt.svg",
 ) -> str:
-    """Convert image into a compact Retro CRT Amber ASCII terminal SVG (350x356)."""
+    """Convert image into a compact GitHub Blue CRT ASCII terminal SVG (350x356)."""
     w, h = 350, 356
     prefix = "cur"
     cols, cw, lh, fs = 76, 3.55, 5.1, 5.4
@@ -123,12 +123,12 @@ def render_currents_crt(
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <style>
 text{{font-family:{FONT_STACK}}}
-.bar-t{{font-size:11px;font-weight:700;fill:{AMBER_CORE};letter-spacing:0.3px}}
-.bar-r{{font-size:10px;fill:{AMBER_MID};letter-spacing:0.3px}}
+.bar-t{{font-size:11px;font-weight:700;fill:{ACCENT_CORE};letter-spacing:0.3px}}
+.bar-r{{font-size:10px;fill:{ACCENT_MID};letter-spacing:0.3px}}
 .asc-art text{{font-size:{fs}px;white-space:pre}}
-.foot-k{{font-size:10.5px;font-weight:700;fill:{AMBER_CORE}}}
-.foot-v{{font-size:10.5px;fill:{AMBER_BRIGHT}}}
-.foot-d{{font-size:9.5px;fill:{AMBER_DIM}}}
+.foot-k{{font-size:10.5px;font-weight:700;fill:{ACCENT_CORE}}}
+.foot-v{{font-size:10.5px;fill:{ACCENT_BRIGHT}}}
+.foot-d{{font-size:9.5px;fill:{ACCENT_DIM}}}
 .r{{opacity:0;transform:translateY(5px);animation:in .50s cubic-bezier(.16,1,.3,1) forwards}}
 .art-pulse{{animation:art-breathe 4.0s ease-in-out infinite}}
 .led{{animation:led-pulse 2.2s ease-in-out infinite}}
