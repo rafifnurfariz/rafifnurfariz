@@ -20,6 +20,6 @@
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=3" alt="GitHub Blue Pac-Man Contribution Graph" width="835" />
+<img src="https://raw.githubusercontent.com/rafifnurfariz/rafifnurfariz/output/pacman-contribution-graph-dark.svg?v=4" alt="GitHub Blue Pac-Man Contribution Graph" width="835" />
 
 </div>

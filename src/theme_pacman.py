@@ -11,6 +11,7 @@ DARK_BLUE_MAP: dict[str, str] = {
     "#26a641": "#58a6ff",
     "#39d353": "#79c0ff",
     "#8b949e": "#7da5d8",
+    "#ffffff": "#388bfd",
 }
 
 LIGHT_BLUE_MAP: dict[str, str] = {
@@ -28,16 +29,23 @@ def _remap_colors(svg: str, color_map: dict[str, str]) -> str:
     return pattern.sub(lambda m: color_map[m.group(0).lower()], svg)
 
 
-def _strip_existing_pac_in(inner: str) -> str:
-    """Remove legacy inline .pac-in style/group wrapper if already present."""
+def _clean_inner_body(inner: str) -> str:
+    """Strip legacy wrappers and redundant 100% background rect before framing."""
     inner = re.sub(r"<style>\.pac-in\{.*?</style>", "", inner, count=1, flags=re.DOTALL)
     if inner.startswith('<g class="pac-in">') and inner.endswith("</g>"):
         inner = inner[len('<g class="pac-in">') : -len("</g>")]
+    inner = re.sub(
+        r'<rect\s+width="100%"\s+height="100%"\s+fill="#0d1117"\s*/?>',
+        "",
+        inner,
+        count=1,
+        flags=re.IGNORECASE,
+    )
     return inner
 
 
 def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
-    """Recolor contribution tiles to GitHub Blue and wrap dark graph in matching CRT frame."""
+    """Recolor contribution tiles & walls to GitHub Blue inside a unified 860px CRT card."""
     color_map = DARK_BLUE_MAP if dark else LIGHT_BLUE_MAP
     recolored = _remap_colors(svg_text, color_map)
 
@@ -56,7 +64,7 @@ def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
                 recolored = recolored[:end_idx] + "</g>" + recolored[end_idx:]
         return recolored
 
-    if 'data-crt-blue="1"' in recolored:
+    if 'data-crt-blue="2"' in recolored:
         return recolored
 
     open_end = recolored.find(">")
@@ -70,42 +78,54 @@ def theme_pacman_svg(svg_text: str, dark: bool = True) -> str:
     inner_w = float(w_match.group(1)) if w_match else 1166.0
     inner_h = float(h_match.group(1)) if h_match else 184.0
 
-    inner_body = _strip_existing_pac_in(recolored[open_end + 1 : close_start])
+    inner_body = _clean_inner_body(recolored[open_end + 1 : close_start])
 
-    pad_x = 20.0
-    header_h = 42.0
-    pad_top = 14.0
-    pad_bottom = 18.0
-    outer_w = int(round(inner_w + pad_x * 2))
-    outer_h = int(round(inner_h + pad_top + header_h + pad_bottom + 8))
-    scr_w = outer_w - 28
-    scr_h = outer_h - 28
+    # Match exact 860px coordinate system of crt_bios.svg & btop_telemetry.svg
+    w, h = 860, 196
+    inner_scr_w, inner_scr_h = w - 24, h - 24
+    target_w = 804.0
+    scale = target_w / max(1.0, inner_w)
+    scaled_h = inner_h * scale
+    tx = (w - target_w) / 2.0
+    ty = 42.0 + (142.0 - scaled_h) / 2.0
 
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{outer_w}" height="{outer_h}" viewBox="0 0 {outer_w} {outer_h}" data-crt-blue="1">
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" data-crt-blue="2">
 <style>
-.pac-bar-t{{font-family:{FONT_STACK};font-size:16px;font-weight:700;fill:#58a6ff;letter-spacing:0.5px}}
-.pac-bar-r{{font-family:{FONT_STACK};font-size:14.5px;fill:#7da5d8;letter-spacing:0.4px}}
+.pac-bar-t{{font-family:{FONT_STACK};font-size:11.5px;font-weight:700;fill:#58a6ff;letter-spacing:0.4px}}
+.pac-bar-r{{font-family:{FONT_STACK};font-size:10.5px;fill:#7da5d8;letter-spacing:0.4px}}
 .pac-led{{animation:pacLed 2.2s ease-in-out infinite}}
-.pac-in{{opacity:0;transform:translateY(8px);animation:pacIn .6s cubic-bezier(.16,1,.3,1) .15s forwards}}
+.pac-in{{opacity:0;transform:translateY(6px);animation:pacIn .55s cubic-bezier(.16,1,.3,1) .12s forwards}}
 @keyframes pacLed{{0%,100%{{opacity:1}}50%{{opacity:0.42}}}}
 @keyframes pacIn{{to{{opacity:1;transform:none}}}}
 @media (prefers-reduced-motion:reduce){{.pac-led,.pac-in{{animation:none;opacity:1;transform:none}}}}
 </style>
 <defs>
-  <pattern id="pac-scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#000000" fill-opacity="0.16"/></pattern>
-  <clipPath id="pac-scr"><rect x="14" y="14" width="{scr_w}" height="{scr_h}" rx="12"/></clipPath>
+  <pattern id="pac-scan" width="4" height="3" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#000000" fill-opacity="0.20"/></pattern>
+  <radialGradient id="pac-vig" cx="50%" cy="48%" r="65%">
+    <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.06"/>
+    <stop offset="72%" stop-color="#0d1117" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity="0.38"/>
+  </radialGradient>
+  <filter id="pac-glow" x="-15%" y="-15%" width="130%" height="130%">
+    <feGaussianBlur stdDeviation="1.4" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="pac-scr"><rect x="12" y="12" width="{inner_scr_w}" height="{inner_scr_h}" rx="9"/></clipPath>
 </defs>
-<rect width="{outer_w}" height="{outer_h}" rx="18" fill="#090d13" stroke="#21262d" stroke-width="2"/>
-<rect x="14" y="14" width="{scr_w}" height="{scr_h}" rx="12" fill="#0d1117" stroke="#30363d" stroke-width="1.5"/>
-<rect x="14" y="14" width="{scr_w}" height="{header_h:.0f}" rx="12" fill="#161b22"/>
-<rect x="14" y="42" width="{scr_w}" height="14" fill="#161b22"/>
-<line x1="14" y1="56" x2="{outer_w - 14}" y2="56" stroke="#30363d" stroke-width="1.4"/>
-<circle cx="38" cy="35" r="5.5" fill="#58a6ff" class="pac-led"/>
-<text x="56" y="40.5" class="pac-bar-t">CMD // GitHub Contributions (Pac-Man)</text>
-<text x="{outer_w - 34}" y="40.5" text-anchor="end" class="pac-bar-r">GITHUB BLUE</text>
+<rect width="{w}" height="{h}" rx="14" fill="#090d13" stroke="#21262d" stroke-width="1.5"/>
+<rect x="12" y="12" width="{inner_scr_w}" height="{inner_scr_h}" rx="9" fill="#0d1117" stroke="#30363d" stroke-width="1.2"/>
+<rect x="12" y="12" width="{inner_scr_w}" height="30" rx="9" fill="#161b22"/>
+<rect x="12" y="30" width="{inner_scr_w}" height="12" fill="#161b22"/>
+<line x1="12" y1="42" x2="{w - 12}" y2="42" stroke="#30363d" stroke-width="1"/>
+<circle cx="28" cy="27" r="4" fill="#58a6ff" class="pac-led" filter="url(#pac-glow)"/>
+<text x="40" y="31" class="pac-bar-t">CMD // GitHub Contributions (Pac-Man)</text>
+<text x="{w - 26}" y="31" text-anchor="end" class="pac-bar-r">LIVE GRAPH</text>
 <g clip-path="url(#pac-scr)">
-  <g class="pac-in" transform="translate({pad_x:.0f},{pad_top + header_h + 4:.0f})">{inner_body}</g>
-  <rect x="14" y="56" width="{scr_w}" height="{scr_h - 42}" fill="url(#pac-scan)" pointer-events="none"/>
+  <g transform="translate({tx:.2f},{ty:.2f}) scale({scale:.5f})">
+    <g class="pac-in">{inner_body}</g>
+  </g>
+  <rect x="12" y="42" width="{inner_scr_w}" height="{inner_scr_h - 30}" fill="url(#pac-vig)" pointer-events="none"/>
+  <rect x="12" y="42" width="{inner_scr_w}" height="{inner_scr_h - 30}" fill="url(#pac-scan)" pointer-events="none"/>
 </g>
 </svg>'''
 

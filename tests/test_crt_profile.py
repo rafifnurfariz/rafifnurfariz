@@ -81,16 +81,18 @@ class CrtSvgTests(unittest.TestCase):
         sample = (
             '<svg width="1166" height="184" xmlns="http://www.w3.org/2000/svg">'
             '<rect width="100%" height="100%" fill="#0d1117"/>'
-            '<rect fill="#0e4429"/><rect fill="#006d32"/><rect fill="#26a641"/><rect fill="#39d353"/>'
+            '<rect fill="#ffffff"/><rect fill="#0e4429"/><rect fill="#006d32"/><rect fill="#26a641"/><rect fill="#39d353"/>'
             "</svg>"
         )
         themed = theme_pacman_svg(sample, dark=True)
         root = ET.fromstring(themed)
-        self.assertEqual(root.attrib["data-crt-blue"], "1")
-        for old_green in ("#0e4429", "#006d32", "#26a641", "#39d353"):
-            self.assertNotIn(old_green, themed)
-        for new_blue in ("#0c2d6b", "#1f6feb", "#58a6ff", "#79c0ff"):
+        self.assertEqual(root.attrib["data-crt-blue"], "2")
+        self.assertEqual((root.attrib["width"], root.attrib["height"]), ("860", "196"))
+        for old_color in ("#0e4429", "#006d32", "#26a641", "#39d353", "#ffffff"):
+            self.assertNotIn(old_color, themed)
+        for new_blue in ("#0c2d6b", "#1f6feb", "#58a6ff", "#79c0ff", "#388bfd"):
             self.assertIn(new_blue, themed)
+        self.assertNotIn('class="pac-in" transform=', themed)
         self.assertEqual(theme_pacman_svg(themed, dark=True), themed)
 
     @unittest.skipUnless(HAS_MEDIA_DEPS, "Requires Pillow, NumPy, and SciPy")
